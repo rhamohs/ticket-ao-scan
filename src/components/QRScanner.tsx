@@ -57,7 +57,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
       // Import barcode scanner dynamically for web compatibility
       const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
       
-      // Check permission
+      // Check permission with force to request if needed
       const status = await BarcodeScanner.checkPermission({ force: true });
       
       if (status.granted) {
@@ -76,7 +76,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
         toast({
           variant: 'destructive',
           title: 'Permissão negada',
-          description: 'Permissão da câmera é necessária para escanear códigos QR.',
+          description: 'É necessário autorizar o acesso à câmera para escanear códigos QR. Verifique as configurações do navegador.',
         });
       }
     } catch (error) {
@@ -124,15 +124,15 @@ export function QRScanner({ onValidation }: QRScannerProps) {
               onClick={isScanning ? stopScanning : startScanning}
               variant={isScanning ? "destructive" : "default"}
               size="lg"
-              className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white border-0 shadow-lg"
+              className="w-full h-12 sm:h-14 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white border-0 shadow-lg text-sm sm:text-base"
             >
-              <Camera className="h-4 w-4 mr-2" />
+              <Camera className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               {isScanning ? 'Parar Scanner' : 'Abrir Scanner'}
             </Button>
           ) : (
-            <div className="text-center p-4 bg-muted rounded-lg">
-              <Camera className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
+            <div className="text-center p-3 sm:p-4 bg-muted rounded-lg">
+              <Camera className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 text-muted-foreground" />
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Scanner disponível apenas em dispositivos móveis
               </p>
             </div>
@@ -141,22 +141,23 @@ export function QRScanner({ onValidation }: QRScannerProps) {
 
         {/* Manual Input */}
         <div className="space-y-3">
-          <Label htmlFor="manual-code" className="flex items-center gap-2">
+          <Label htmlFor="manual-code" className="flex items-center gap-2 text-sm">
             <KeyboardIcon className="h-4 w-4" />
             Entrada Manual
           </Label>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input
               id="manual-code"
               placeholder="Digite o código QR..."
               value={manualCode}
               onChange={(e) => setManualCode(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleManualValidation()}
-              className="flex-1"
+              className="flex-1 h-10 sm:h-9"
             />
             <Button 
               onClick={handleManualValidation}
               disabled={!manualCode.trim()}
+              className="w-full sm:w-auto h-10 sm:h-9 text-sm"
             >
               Validar
             </Button>

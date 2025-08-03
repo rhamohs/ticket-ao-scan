@@ -38,33 +38,34 @@ export function AppHeader({ isOnline, totalTickets, hasData = false }: AppHeader
   };
   return (
     <Card className="w-full bg-transparent border-0 shadow-none">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/20">
+      <CardContent className="p-2 sm:p-4">
+        <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-0">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/20">
               <img 
                 src="/lovable-uploads/4286576c-38a4-4fc4-902b-608c593ecc24.png" 
                 alt="Ticket.ao" 
-                className="h-8 w-auto"
+                className="h-6 sm:h-8 w-auto"
               />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-foreground font-nunito tracking-tight">Ticket.ao Pro</h1>
-              <p className="text-sm text-muted-foreground font-nunito font-medium">Validador de Bilhetes</p>
+              <h1 className="text-xl sm:text-2xl font-black text-foreground font-nunito tracking-tight">ticket.ao Pro</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground font-nunito font-medium">Validador de Bilhetes</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 sm:gap-3 flex-wrap">
             {/* Share Session Button */}
             {hasData && (
               <Button
                 onClick={handleShareSession}
                 variant="outline"
                 size="sm"
-                className="bg-gradient-to-r from-primary/10 to-primary/5 text-foreground border-primary/20 hover:bg-primary/10"
+                className="bg-gradient-to-r from-primary/10 to-primary/5 text-foreground border-primary/20 hover:bg-primary/10 text-xs sm:text-sm px-2 sm:px-3"
               >
-                <Share2 className="h-4 w-4 mr-2" />
-                Partilhar
+                <Share2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Partilhar</span>
+                <span className="sm:hidden">Share</span>
               </Button>
             )}
             

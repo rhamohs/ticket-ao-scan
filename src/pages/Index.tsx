@@ -139,8 +139,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-4 max-w-4xl">
-        <div className="space-y-6">
+      <div className="container mx-auto p-2 sm:p-4 max-w-4xl">
+        <div className="space-y-3 sm:space-y-6">
           {/* Header */}
           <AppHeader isOnline={isOnline} totalTickets={totalTickets} hasData={totalTickets > 0} />
 
@@ -155,18 +155,18 @@ const Index = () => {
 
           {/* Main Content */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="import" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">Importar</span>
+            <TabsList className="grid w-full grid-cols-3 h-12 sm:h-10">
+              <TabsTrigger value="import" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline sm:inline">Importar</span>
               </TabsTrigger>
-              <TabsTrigger value="scanner" className="flex items-center gap-2">
-                <QrCode className="h-4 w-4" />
-                <span className="hidden sm:inline">Scanner</span>
+              <TabsTrigger value="scanner" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                <QrCode className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline sm:inline">Scanner</span>
               </TabsTrigger>
-              <TabsTrigger value="history" className="flex items-center gap-2">
-                <History className="h-4 w-4" />
-                <span className="hidden sm:inline">Histórico</span>
+              <TabsTrigger value="history" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                <History className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline sm:inline">Histórico</span>
               </TabsTrigger>
             </TabsList>
 
@@ -189,12 +189,12 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="scanner" className="space-y-4">
-              <div className="flex justify-center mb-4">
+              <div className="flex justify-center mb-3 sm:mb-4">
                 <Button
                   onClick={requestCameraPermission}
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-2 bg-gradient-to-r from-accent/10 to-accent/5 border-accent/30 hover:bg-accent/10"
+                  className="flex items-center gap-2 bg-gradient-to-r from-accent/10 to-accent/5 border-accent/30 hover:bg-accent/10 text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4"
                 >
                   <Camera className="h-3 w-3" />
                   Autorizar Câmera
@@ -217,11 +217,11 @@ const Index = () => {
           )}
 
           {/* Footer */}
-          <div className="text-center text-sm text-muted-foreground py-4">
-            <p>Ticket.ao Pro v1.0 • Validador Profissional de Bilhetes</p>
+          <div className="text-center text-xs sm:text-sm text-muted-foreground py-3 sm:py-4">
+            <p className="text-xs sm:text-sm">ticket.ao Pro v1.0 • Validador Profissional de Bilhetes</p>
             <p className="text-xs mt-1">
-              {isOnline ? '🟢 Modo Online' : '🔴 Modo Offline'} • 
-              {totalTickets > 0 ? ` ${totalTickets} bilhetes carregados` : ' Nenhum bilhete carregado'}
+              {isOnline ? '🟢 Online' : '🔴 Offline'} • 
+              {totalTickets > 0 ? ` ${totalTickets} bilhetes` : ' Nenhum bilhete'}
             </p>
           </div>
         </div>
