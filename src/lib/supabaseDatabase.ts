@@ -248,12 +248,12 @@ class SupabaseTicketDatabase {
 
   // Subscribe to real-time changes
   subscribeToValidations(callback: (payload: any) => void) {
-    if (!this.isSupabaseAvailable) {
+    if (!this.isSupabaseAvailable || !supabase) {
       console.warn('Supabase not available, real-time subscriptions disabled');
       return { unsubscribe: () => {} };
     }
 
-    return supabase!
+    return supabase
       .channel('validation_changes')
       .on('postgres_changes', 
         { event: 'INSERT', schema: 'public', table: 'validation_history' }, 
