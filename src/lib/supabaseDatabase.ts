@@ -26,15 +26,18 @@ class SupabaseTicketDatabase {
       const tickets: Omit<DbTicket, 'created_at' | 'updated_at'>[] = csvData.map((row, index) => {
         console.log('Supabase DB - Processando linha CSV:', row);
         
-        // Generate a UUID-like id from the URL or use index
-        const originalId = row.ID || row.id || `ticket_${index}`;
-        const ticketId = originalId.includes('attendee_id=') 
-          ? originalId.split('attendee_id=')[1] 
-          : `ticket_${Date.now()}_${index}`;
+        // Generate a proper UUID for the ticket
+        const generateUUID = () => {
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          });
+        };
         
         const ticket = {
-          id: ticketId,
-          qr_code: row['Código QR'] || row.qrCode || row.code || originalId,
+          id: generateUUID(),
+          qr_code: row['Código QR'] || row.qrCode || row.code || row.ID || row.id || `ticket_${index}`,
           name: row['Name'] || row.name || '',
           email: row['Email'] || row.email || '',
           phone: row['Phone'] || row.phone || '',
