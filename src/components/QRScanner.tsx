@@ -179,37 +179,34 @@ export function QRScanner({ onValidation }: QRScannerProps) {
     try {
       const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
       
-      // Stop current scanning completely
+      console.log(`Switching from ${cameraDirection} camera`);
+      
+      // Stop current scanning completely and show background
       await BarcodeScanner.stopScan();
+      BarcodeScanner.showBackground();
       
       // Toggle camera direction
       const newDirection = cameraDirection === 'back' ? 'front' : 'back';
       setCameraDirection(newDirection);
       
-      // Update overlay button text immediately
-      const overlay = document.getElementById('camera-overlay');
-      if (overlay) {
-        const switchButton = overlay.querySelector('button');
-        if (switchButton) {
-          switchButton.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-            </svg>
-            ${newDirection === 'back' ? 'Frontal' : 'Traseira'}
-          `;
-        }
-      }
+      console.log(`Switching to ${newDirection} camera`);
       
-      // Wait a moment before restarting to ensure camera is released
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Remove current overlay
+      removeCameraOverlay();
       
-      // Restart scanning with new camera direction
+      // Wait a moment to ensure camera is fully released
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Hide background and add new overlay
+      BarcodeScanner.hideBackground();
+      addCameraOverlay();
+      
+      // Start scanning with new camera direction
       const result = await BarcodeScanner.startScan({
         cameraDirection: newDirection
       });
       
-      console.log(`BarcodeScanner camera switched to: ${newDirection}`);
+      console.log(`BarcodeScanner restarted with camera: ${newDirection}`);
       
       if (result.hasContent) {
         await validateCode(result.content);
