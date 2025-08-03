@@ -56,61 +56,29 @@ export function QRScanner({ onValidation }: QRScannerProps) {
     setIsScanning(true);
     
     try {
-      const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
+      const { BarcodeScanner, BarcodeFormat, LensFacing } = await import('@capacitor-mlkit/barcode-scanning');
       
-      // Check permission
-      const permission = await BarcodeScanner.checkPermission({ force: true });
+      // Request permission
+      const permission = await BarcodeScanner.requestPermissions();
       
-      if (permission.granted) {
-        // Hide background and show scanner
-        document.body.classList.add('scanner-active');
+      if (permission.camera === 'granted') {
+        // Check if scanner is supported
+        const isSupported = await BarcodeScanner.isSupported();
         
-        // For camera selection, we need to use a different approach
-        // Since @capacitor-community/barcode-scanner doesn't support camera selection
-        // We'll use navigator.mediaDevices to check available cameras first
-        try {
-          const devices = await navigator.mediaDevices.enumerateDevices();
-          const videoDevices = devices.filter(device => device.kind === 'videoinput');
-          console.log('📹 Available cameras:', videoDevices.length);
+        if (isSupported.supported) {
+          // Start scanning with camera selection
+          const scanResult = await BarcodeScanner.scan({
+            formats: [BarcodeFormat.QrCode, BarcodeFormat.Ean13, BarcodeFormat.Ean8, BarcodeFormat.Code128]
+          });
           
-          // Find the desired camera
-          let deviceId = undefined;
-          if (cameraDirection === 'front') {
-            const frontCamera = videoDevices.find(device => 
-              device.label.toLowerCase().includes('front') || 
-              device.label.toLowerCase().includes('user') ||
-              device.label.toLowerCase().includes('selfie')
-            );
-            deviceId = frontCamera?.deviceId;
-          } else {
-            const backCamera = videoDevices.find(device => 
-              device.label.toLowerCase().includes('back') || 
-              device.label.toLowerCase().includes('rear') ||
-              device.label.toLowerCase().includes('environment')
-            );
-            deviceId = backCamera?.deviceId || videoDevices[0]?.deviceId;
+          if (scanResult.barcodes && scanResult.barcodes.length > 0) {
+            const qrCode = scanResult.barcodes[0].rawValue;
+            console.log('📷 QR Code scanned:', qrCode);
+            await validateCode(qrCode);
           }
-          
-          console.log(`📹 Selected camera: ${cameraDirection}, deviceId: ${deviceId}`);
-        } catch (error) {
-          console.log('📹 Could not enumerate cameras, using default');
+        } else {
+          throw new Error('Scanner not supported on this device');
         }
-        
-        // Prepare scanner
-        await BarcodeScanner.prepare();
-        
-        // Start scanning - note: camera selection limitation in this plugin
-        const result = await BarcodeScanner.startScan({
-          targetedFormats: ['QR_CODE', 'EAN_13', 'EAN_8', 'CODE_128'],
-        });
-        
-        if (result.hasContent) {
-          console.log('📷 QR Code scanned:', result.content);
-          validateCode(result.content);
-          stopScanning();
-        }
-        
-        setScannerSupported(true);
       } else {
         throw new Error('Camera permission denied');
       }
@@ -120,17 +88,17 @@ export function QRScanner({ onValidation }: QRScannerProps) {
       toast({
         variant: 'destructive',
         title: 'Erro do scanner',
-        description: 'Não foi possível iniciar o scanner. Use a entrada manual.',
+        description: 'Scanner disponível apenas em apps nativos. Use entrada manual.',
       });
+    } finally {
       setIsScanning(false);
     }
   };
 
   const stopScanning = async () => {
     try {
-      const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
+      const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
       await BarcodeScanner.stopScan();
-      document.body.classList.remove('scanner-active');
     } catch (error) {
       console.error('Error stopping scanner:', error);
     }
