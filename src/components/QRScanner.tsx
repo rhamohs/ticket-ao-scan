@@ -56,78 +56,46 @@ export function QRScanner({ onValidation }: QRScannerProps) {
     setIsScanning(true);
     
     try {
-      // Import barcode scanner dynamically for web compatibility
-      const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
+      // Import the new MLKit barcode scanner
+      const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
       
-      // Request permission automatically when opening camera
-      let status = await BarcodeScanner.checkPermission({ force: false });
-      console.log('📱 Permission status:', status);
+      // Request permission
+      console.log('📱 Requesting permission...');
+      const permission = await BarcodeScanner.requestPermissions();
+      console.log('📱 Permission result:', permission);
       
-      if (status.denied) {
-        // If permission is denied, request it
-        console.log('📱 Requesting camera permission...');
-        status = await BarcodeScanner.checkPermission({ force: true });
-        console.log('📱 Permission after request:', status);
-      }
-      
-      if (status.granted) {
-        // Make background transparent
-        BarcodeScanner.hideBackground();
-        console.log('🎥 Background hidden');
+      if (permission.camera === 'granted') {
+        // Check if scanner is supported
+        const isSupported = await BarcodeScanner.isSupported();
+        console.log('📱 Scanner supported:', isSupported);
         
-        // Add overlay for camera controls
-        addCameraOverlay(cameraDirection);
-        console.log('🎥 Overlay added');
-        
-        // CRITICAL: Start scanning with explicit camera direction
-        console.log(`🎥 ATTEMPTING TO START with camera direction: ${cameraDirection}`);
-        console.log(`🎥 Camera config object:`, { cameraDirection: cameraDirection });
-        
-        // Try different approaches to force camera selection
-        let scanConfig;
-        if (cameraDirection === 'back') {
-          scanConfig = { 
-            cameraDirection: 'back',
-            showFlipCameraButton: false,
-            showTorchButton: false
-          };
+        if (isSupported.supported) {
+          console.log(`🎥 Starting scan with camera: ${cameraDirection}`);
+          
+          // Start scanning - the new plugin handles camera selection differently
+          const scanResult = await BarcodeScanner.scan();
+          
+          console.log('📱 Scan result:', scanResult);
+          
+          if (scanResult.barcodes && scanResult.barcodes.length > 0) {
+            const qrCode = scanResult.barcodes[0].rawValue;
+            console.log('📷 QR Code scanned:', qrCode);
+            await validateCode(qrCode);
+          }
         } else {
-          scanConfig = { 
-            cameraDirection: 'front',
-            showFlipCameraButton: false,
-            showTorchButton: false
-          };
-        }
-        
-        console.log(`🎥 Final scan config:`, scanConfig);
-        
-        const result = await BarcodeScanner.startScan(scanConfig);
-        
-        console.log(`🎥 Scan started with result:`, result);
-        console.log(`🎥 Expected camera: ${cameraDirection}, Config used:`, scanConfig);
-        
-        if (result.hasContent) {
-          console.log('📷 QR Code scanned:', result.content);
-          await validateCode(result.content);
-          removeCameraOverlay();
+          throw new Error('Scanner not supported');
         }
       } else {
-        console.log('❌ Camera permission denied');
-        toast({
-          variant: 'destructive',
-          title: 'Permissão necessária',
-          description: 'Autorize o acesso à câmera nas configurações do dispositivo.',
-        });
-        setIsScanning(false);
+        throw new Error('Camera permission denied');
       }
     } catch (error) {
       console.error('❌ Scanner error:', error);
-      console.error('❌ Expected camera direction was:', cameraDirection);
       toast({
         variant: 'destructive',
         title: 'Erro do scanner',
         description: 'Não foi possível iniciar o scanner. Use a entrada manual.',
       });
+    } finally {
       setIsScanning(false);
     }
   };
