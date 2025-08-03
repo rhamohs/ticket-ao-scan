@@ -99,7 +99,7 @@ export function ValidationResult({ result, onClose }: ValidationResultProps) {
               <div className="space-y-2 text-sm bg-white/10 p-3 rounded-lg">
                 <div className="flex justify-between">
                   <span className="font-medium">Nome:</span>
-                  <span>{result.ticket.name || result.ticket.id}</span>
+                  <span>{result.ticket.name || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Código QR:</span>

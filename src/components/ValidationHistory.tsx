@@ -77,13 +77,29 @@ export function ValidationHistory() {
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.width;
       
+      // Load and add logo
+      try {
+        const logoResponse = await fetch('/lovable-uploads/4286576c-38a4-4fc4-902b-608c593ecc24.png');
+        const logoBlob = await logoResponse.blob();
+        const logoBase64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(logoBlob);
+        });
+        
+        // Add logo
+        doc.addImage(logoBase64, 'PNG', 20, 15, 30, 20);
+      } catch (error) {
+        console.warn('Could not load logo for PDF');
+      }
+      
       // Header
       doc.setFontSize(20);
       doc.setTextColor(44, 44, 44);
       doc.text('Ticket.ao Pro', pageWidth / 2, 30, { align: 'center' });
       
       doc.setFontSize(16);
-      doc.text('Relatório de Validação', pageWidth / 2, 45, { align: 'center' });
+      doc.text('Histórico de Validações', pageWidth / 2, 45, { align: 'center' });
       
       // Date
       doc.setFontSize(10);
@@ -116,7 +132,7 @@ export function ValidationHistory() {
         doc.setTextColor(44, 44, 44);
         doc.text(`${index + 1}. ${item.eventName || 'Evento'}`, 20, yPosition);
         doc.setTextColor(100, 100, 100);
-        doc.text(`Nome: ${item.name || item.qrCode}`, 30, yPosition + 10);
+        doc.text(`Nome: ${item.name || 'Nome não disponível'}`, 30, yPosition + 10);
         doc.text(`Status: ${item.status === 'valid' ? 'Válido' : item.status === 'used' ? 'Usado' : 'Não encontrado'}`, 30, yPosition + 20);
         doc.text(`Data: ${formatDate(item.validationDate)}`, 30, yPosition + 30);
         
@@ -267,7 +283,7 @@ export function ValidationHistory() {
                       {item.eventName || 'Evento Não Especificado'}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {item.name || item.qrCode}
+                      {item.name || 'Nome não disponível'}
                     </div>
                   </div>
                 </div>
