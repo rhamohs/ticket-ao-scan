@@ -52,7 +52,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
   };
 
   const startScanning = async () => {
-    console.log('🎥 Starting scanner...');
+    console.log(`🎥 Starting scanner with direction: ${cameraDirection}`);
     setIsScanning(true);
     
     try {
@@ -79,13 +79,32 @@ export function QRScanner({ onValidation }: QRScannerProps) {
         addCameraOverlay(cameraDirection);
         console.log('🎥 Overlay added');
         
-        // Start scanning with current camera direction
-        console.log(`🎥 Starting scan with camera: ${cameraDirection}`);
-        const result = await BarcodeScanner.startScan({
-          cameraDirection: cameraDirection
-        });
+        // CRITICAL: Start scanning with explicit camera direction
+        console.log(`🎥 ATTEMPTING TO START with camera direction: ${cameraDirection}`);
+        console.log(`🎥 Camera config object:`, { cameraDirection: cameraDirection });
         
-        console.log(`🎥 Scan started with camera: ${cameraDirection}`);
+        // Try different approaches to force camera selection
+        let scanConfig;
+        if (cameraDirection === 'back') {
+          scanConfig = { 
+            cameraDirection: 'back',
+            showFlipCameraButton: false,
+            showTorchButton: false
+          };
+        } else {
+          scanConfig = { 
+            cameraDirection: 'front',
+            showFlipCameraButton: false,
+            showTorchButton: false
+          };
+        }
+        
+        console.log(`🎥 Final scan config:`, scanConfig);
+        
+        const result = await BarcodeScanner.startScan(scanConfig);
+        
+        console.log(`🎥 Scan started with result:`, result);
+        console.log(`🎥 Expected camera: ${cameraDirection}, Config used:`, scanConfig);
         
         if (result.hasContent) {
           console.log('📷 QR Code scanned:', result.content);
@@ -103,6 +122,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
       }
     } catch (error) {
       console.error('❌ Scanner error:', error);
+      console.error('❌ Expected camera direction was:', cameraDirection);
       toast({
         variant: 'destructive',
         title: 'Erro do scanner',
