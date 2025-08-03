@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { QrCode, Camera, KeyboardIcon, Zap } from 'lucide-react';
+import { QrCode, Camera, KeyboardIcon, Zap, RotateCcw } from 'lucide-react';
 import { supabaseTicketDB } from '@/lib/supabaseDatabase';
 import { ValidationResult } from '@/types/ticket';
 import { toast } from '@/hooks/use-toast';
@@ -16,6 +16,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
   const [manualCode, setManualCode] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [scannerSupported, setScannerSupported] = useState(true);
+  const [cameraDirection, setCameraDirection] = useState<'front' | 'back'>('back');
 
   useEffect(() => {
     // Check if we're in a mobile environment with camera support
@@ -58,18 +59,23 @@ export function QRScanner({ onValidation }: QRScannerProps) {
       const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
       
       // Request permission automatically when opening camera
-      const status = await BarcodeScanner.checkPermission({ force: true });
+      let status = await BarcodeScanner.checkPermission({ force: false });
+      
+      if (status.denied) {
+        // If permission is denied, request it
+        status = await BarcodeScanner.checkPermission({ force: true });
+      }
       
       if (status.granted) {
         // Make background transparent
         BarcodeScanner.hideBackground();
         
-        // Configure to use back camera (main camera) by default
+        // Start scanning with current camera direction
         const result = await BarcodeScanner.startScan({
-          cameraDirection: 'back' // Ensures back/main camera is used
+          cameraDirection: cameraDirection
         });
         
-        console.log('BarcodeScanner camera direction set to: back');
+        console.log(`BarcodeScanner camera direction set to: ${cameraDirection}`);
         
         if (result.hasContent) {
           await validateCode(result.content);
@@ -80,6 +86,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
           title: 'Permissão necessária',
           description: 'Autorize o acesso à câmera nas configurações do dispositivo.',
         });
+        setIsScanning(false);
       }
     } catch (error) {
       console.error('Scanner error:', error);
@@ -88,15 +95,38 @@ export function QRScanner({ onValidation }: QRScannerProps) {
         title: 'Erro do scanner',
         description: 'Não foi possível iniciar o scanner. Use a entrada manual.',
       });
-    } finally {
       setIsScanning(false);
-      // Show background again
-      try {
-        const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
-        BarcodeScanner.showBackground();
-      } catch (e) {
-        // Ignore error if not in mobile environment
+    }
+  };
+
+  const switchCamera = async () => {
+    try {
+      const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
+      
+      // Stop current scanning
+      BarcodeScanner.stopScan();
+      
+      // Toggle camera direction
+      const newDirection = cameraDirection === 'back' ? 'front' : 'back';
+      setCameraDirection(newDirection);
+      
+      // Restart scanning with new camera direction
+      const result = await BarcodeScanner.startScan({
+        cameraDirection: newDirection
+      });
+      
+      console.log(`BarcodeScanner camera switched to: ${newDirection}`);
+      
+      if (result.hasContent) {
+        await validateCode(result.content);
       }
+    } catch (error) {
+      console.error('Camera switch error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao alternar câmera',
+        description: 'Não foi possível alterar a câmera.',
+      });
     }
   };
 
@@ -119,18 +149,32 @@ export function QRScanner({ onValidation }: QRScannerProps) {
       icon={<Zap className="h-5 w-5 text-primary" />}
       className="w-full"
     >
-        {/* Camera Scanner Button */}
+        {/* Camera Scanner Buttons */}
         <div className="space-y-3">
           {scannerSupported ? (
-            <Button
-              onClick={isScanning ? stopScanning : startScanning}
-              variant={isScanning ? "destructive" : "default"}
-              size="sm"
-              className="w-full h-10 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white border-0 shadow-md text-sm rounded-lg"
-            >
-              <Camera className="h-4 w-4 mr-2" />
-              {isScanning ? 'Parar Scanner' : 'Abrir Scanner'}
-            </Button>
+            <div className="space-y-2">
+              <Button
+                onClick={isScanning ? stopScanning : startScanning}
+                variant={isScanning ? "destructive" : "default"}
+                size="sm"
+                className="w-full h-10 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white border-0 shadow-md text-sm rounded-lg"
+              >
+                <Camera className="h-4 w-4 mr-2" />
+                {isScanning ? 'Parar Scanner' : 'Abrir Scanner'}
+              </Button>
+              
+              {isScanning && (
+                <Button
+                  onClick={switchCamera}
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-9 text-sm"
+                >
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Alternar para Câmera {cameraDirection === 'back' ? 'Frontal' : 'Traseira'}
+                </Button>
+              )}
+            </div>
           ) : (
             <div className="text-center p-3 sm:p-4 bg-muted rounded-lg">
               <Camera className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 text-muted-foreground" />
