@@ -49,8 +49,8 @@ export function AppHeader({ isOnline, totalTickets, hasData = false }: AppHeader
               />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-foreground font-nunito tracking-tight">ticket.ao Pro</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground font-nunito font-medium">Validador de Bilhetes</p>
+              <h1 className="text-2xl sm:text-4xl font-black text-foreground font-nunito tracking-tight bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">ticket.ao Pro</h1>
+              <p className="text-sm sm:text-lg text-muted-foreground font-nunito font-semibold">Dashboard de Validação</p>
             </div>
           </div>
           

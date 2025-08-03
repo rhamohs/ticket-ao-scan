@@ -121,14 +121,8 @@ export function CSVImporter({ onImportComplete }: CSVImporterProps) {
           className="hidden"
         />
 
-        <div className="text-sm text-muted-foreground space-y-2">
-          <p><strong>Formatos CSV suportados:</strong></p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
-            <li><strong>Formato comum:</strong> QR Code URL, Name, Ticket Type, Security Code, Email, Phone</li>
-            <li><strong>Formato padrão:</strong> ID, Código QR, Status de Validação, Data/Hora da Validação, Número de utilizações</li>
-            <li>A aplicação detecta automaticamente diferentes formatos e ordens de colunas</li>
-            <li>Campos obrigatórios: pelo menos um identificador e código QR</li>
-          </ul>
+        <div className="text-sm text-muted-foreground">
+          <p><strong>Formatos suportados:</strong> Detecção automática de diferentes formatos CSV. Campos obrigatórios: identificador e código QR.</p>
         </div>
       </CardContent>
     </Card>

@@ -57,7 +57,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
       // Import barcode scanner dynamically for web compatibility
       const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
       
-      // Check permission with force to request if needed
+      // Always request permission when opening camera
       const status = await BarcodeScanner.checkPermission({ force: true });
       
       if (status.granted) {
@@ -66,7 +66,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
         
         // Configure to use back camera by default
         const result = await BarcodeScanner.startScan({
-          cameraDirection: 'back' // Use back camera instead of front
+          cameraDirection: 'back'
         });
         
         if (result.hasContent) {
@@ -75,8 +75,8 @@ export function QRScanner({ onValidation }: QRScannerProps) {
       } else {
         toast({
           variant: 'destructive',
-          title: 'Permissão negada',
-          description: 'É necessário autorizar o acesso à câmera para escanear códigos QR. Verifique as configurações do navegador.',
+          title: 'Permissão necessária',
+          description: 'Autorize o acesso à câmera nas configurações do dispositivo.',
         });
       }
     } catch (error) {
@@ -123,10 +123,10 @@ export function QRScanner({ onValidation }: QRScannerProps) {
             <Button
               onClick={isScanning ? stopScanning : startScanning}
               variant={isScanning ? "destructive" : "default"}
-              size="lg"
-              className="w-full h-12 sm:h-14 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white border-0 shadow-lg text-sm sm:text-base"
+              size="sm"
+              className="w-full h-10 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white border-0 shadow-md text-sm rounded-lg"
             >
-              <Camera className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              <Camera className="h-4 w-4 mr-2" />
               {isScanning ? 'Parar Scanner' : 'Abrir Scanner'}
             </Button>
           ) : (
