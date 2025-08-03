@@ -76,7 +76,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
         console.log('🎥 Background hidden');
         
         // Add overlay for camera controls
-        addCameraOverlay();
+        addCameraOverlay(cameraDirection);
         console.log('🎥 Overlay added');
         
         // Start scanning with current camera direction
@@ -112,7 +112,8 @@ export function QRScanner({ onValidation }: QRScannerProps) {
     }
   };
 
-  const addCameraOverlay = () => {
+  const addCameraOverlay = (currentDirection?: 'front' | 'back') => {
+    const direction = currentDirection || cameraDirection;
     const overlay = document.createElement('div');
     overlay.id = 'camera-overlay';
     overlay.style.cssText = `
@@ -135,7 +136,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
         <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
         <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
       </svg>
-      ${cameraDirection === 'back' ? 'Frontal' : 'Traseira'}
+      ${direction === 'back' ? 'Frontal' : 'Traseira'}
     `;
     switchButton.style.cssText = `
       background: white;
@@ -208,9 +209,9 @@ export function QRScanner({ onValidation }: QRScannerProps) {
       // Wait a moment to ensure camera is fully released
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      // Hide background and add new overlay
+      // Hide background and add new overlay with correct direction
       BarcodeScanner.hideBackground();
-      addCameraOverlay();
+      addCameraOverlay(newDirection);
       
       // Start scanning with new camera direction
       const result = await BarcodeScanner.startScan({
