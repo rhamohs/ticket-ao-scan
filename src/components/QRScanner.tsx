@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { QrCode, Camera, KeyboardIcon } from 'lucide-react';
+import { QrCode, Camera, KeyboardIcon, Zap } from 'lucide-react';
 import { supabaseTicketDB } from '@/lib/supabaseDatabase';
 import { ValidationResult } from '@/types/ticket';
 import { toast } from '@/hooks/use-toast';
+import { ModernCard } from './ModernCard';
 
 interface QRScannerProps {
   onValidation: (result: ValidationResult) => void;
@@ -64,7 +64,10 @@ export function QRScanner({ onValidation }: QRScannerProps) {
         // Make background transparent
         BarcodeScanner.hideBackground();
         
-        const result = await BarcodeScanner.startScan();
+        // Configure to use back camera by default
+        const result = await BarcodeScanner.startScan({
+          cameraDirection: 'back' // Use back camera instead of front
+        });
         
         if (result.hasContent) {
           await validateCode(result.content);
@@ -107,28 +110,23 @@ export function QRScanner({ onValidation }: QRScannerProps) {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <QrCode className="h-5 w-5" />
-          Validar Bilhete
-        </CardTitle>
-        <CardDescription>
-          Escaneie o código QR ou digite manualmente para validar
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <ModernCard 
+      variant="glass"
+      title="Validar Bilhete"
+      description="Escaneie o código QR ou digite manualmente para validar"
+      icon={<Zap className="h-5 w-5 text-primary" />}
+      className="w-full"
+    >
         {/* Camera Scanner Button */}
         <div className="space-y-3">
           {scannerSupported ? (
             <Button
               onClick={isScanning ? stopScanning : startScanning}
-              variant="scanner"
-              size="xl"
-              className="w-full"
-              disabled={false}
+              variant={isScanning ? "destructive" : "default"}
+              size="lg"
+              className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white border-0 shadow-lg"
             >
-              <Camera className="h-5 w-5 mr-2" />
+              <Camera className="h-4 w-4 mr-2" />
               {isScanning ? 'Parar Scanner' : 'Abrir Scanner'}
             </Button>
           ) : (
@@ -165,7 +163,6 @@ export function QRScanner({ onValidation }: QRScannerProps) {
           </div>
         </div>
 
-      </CardContent>
-    </Card>
+    </ModernCard>
   );
 }

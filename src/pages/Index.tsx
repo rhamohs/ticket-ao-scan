@@ -146,15 +146,11 @@ const Index = () => {
 
           {/* Multi-user sync status */}
           {isInitialized && (
-            <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
-              <CardContent className="pt-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <Users className="h-4 w-4 text-primary" />
-                  <span className="font-medium text-primary">Modo Multi-utilizador Ativo</span>
-                  <span className="text-muted-foreground">• Sincronização em tempo real entre dispositivos</span>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex items-center gap-2 text-sm bg-transparent p-3 rounded-lg">
+              <Users className="h-4 w-4 text-primary" />
+              <span className="font-medium text-primary">Modo Multi-utilizador Ativo</span>
+              <span className="text-muted-foreground">• Sincronização em tempo real entre dispositivos</span>
+            </div>
           )}
 
           {/* Main Content */}
@@ -198,9 +194,9 @@ const Index = () => {
                   onClick={requestCameraPermission}
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 bg-gradient-to-r from-accent/10 to-accent/5 border-accent/30 hover:bg-accent/10"
                 >
-                  <Camera className="h-4 w-4" />
+                  <Camera className="h-3 w-3" />
                   Autorizar Câmera
                 </Button>
               </div>

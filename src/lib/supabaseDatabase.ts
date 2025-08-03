@@ -1,5 +1,6 @@
 import { supabase, DbTicket, DbValidationHistory } from './supabase';
 import { Ticket, ValidationHistory } from '@/types/ticket';
+import { localValidationCache } from './localValidation';
 
 class SupabaseTicketDatabase {
   // Initialize tables if they don't exist
@@ -57,6 +58,9 @@ class SupabaseTicketDatabase {
           .upsert(tickets, { onConflict: 'qr_code' });
         
         if (insertError) throw insertError;
+        
+        // Sync to local cache for fast validation
+        await localValidationCache.syncFromDatabase(tickets);
       }
 
       return csvData.length;
@@ -73,10 +77,33 @@ class SupabaseTicketDatabase {
     return 'valid'; // Default to valid instead of invalid
   }
 
-  // Validate a QR code
+  // Validate a QR code with local cache for speed
   async validateTicket(qrCode: string): Promise<{ success: boolean; ticket?: Ticket; message: string; status: 'valid' | 'used' | 'not_found' }> {
     try {
-      // Get ticket from database
+      // First check local cache for instant feedback
+      const cachedTicket = localValidationCache.getTicket(qrCode);
+      
+      if (cachedTicket && cachedTicket.status === 'used') {
+        return {
+          success: false,
+          ticket: {
+            id: '',
+            qrCode: cachedTicket.qrCode,
+            name: cachedTicket.name || '',
+            email: cachedTicket.email || '',
+            phone: cachedTicket.phone || '',
+            securityCode: '',
+            status: cachedTicket.status,
+            validationDate: null,
+            validationCount: 0,
+            eventName: cachedTicket.eventName || 'Evento'
+          },
+          message: 'Ingresso já foi utilizado (validação local)',
+          status: 'used'
+        };
+      }
+
+      // Check with database for authoritative validation
       const { data: ticket, error } = await supabase
         .from('tickets')
         .select('*')
@@ -92,6 +119,16 @@ class SupabaseTicketDatabase {
       }
 
       if (ticket.status === 'used') {
+        // Update local cache
+        localValidationCache.updateTicket(qrCode, {
+          qrCode: ticket.qr_code,
+          status: 'used',
+          name: ticket.name,
+          email: ticket.email,
+          phone: ticket.phone,
+          eventName: ticket.event_name
+        });
+        
         return {
           success: false,
           ticket: this.mapDbTicketToTicket(ticket),
@@ -100,7 +137,10 @@ class SupabaseTicketDatabase {
         };
       }
 
-      // Update ticket status to used
+      // Mark as used locally for instant feedback
+      localValidationCache.markAsUsedLocally(qrCode);
+
+      // Update ticket status in database
       const { error: updateError } = await supabase
         .from('tickets')
         .update({
@@ -110,7 +150,18 @@ class SupabaseTicketDatabase {
         })
         .eq('id', ticket.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        // Revert local cache if database update fails
+        localValidationCache.updateTicket(qrCode, {
+          qrCode: ticket.qr_code,
+          status: 'valid',
+          name: ticket.name,
+          email: ticket.email,
+          phone: ticket.phone,
+          eventName: ticket.event_name
+        });
+        throw updateError;
+      }
 
       // Record validation in history
       const historyRecord: Omit<DbValidationHistory, 'id' | 'created_at'> = {
@@ -204,6 +255,9 @@ class SupabaseTicketDatabase {
   // Clear all data
   async clear(): Promise<void> {
     try {
+      // Clear local cache first
+      localValidationCache.clear();
+      
       // Clear tickets
       const { data: existingTickets } = await supabase.from('tickets').select('id');
       if (existingTickets && existingTickets.length > 0) {

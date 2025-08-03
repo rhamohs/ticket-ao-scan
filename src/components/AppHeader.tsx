@@ -37,11 +37,11 @@ export function AppHeader({ isOnline, totalTickets, hasData = false }: AppHeader
     }
   };
   return (
-    <Card className="w-full bg-gradient-to-r from-header-gradient-start to-header-gradient-end text-header-foreground border-0 shadow-lg">
+    <Card className="w-full bg-transparent border-0 shadow-none">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-lg">
+            <div className="p-2 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/20">
               <img 
                 src="/lovable-uploads/4286576c-38a4-4fc4-902b-608c593ecc24.png" 
                 alt="Ticket.ao" 
@@ -49,8 +49,8 @@ export function AppHeader({ isOnline, totalTickets, hasData = false }: AppHeader
               />
             </div>
             <div>
-              <h1 className="text-xl font-bold">Ticket.ao Pro</h1>
-              <p className="text-sm opacity-90">Validador de Bilhetes</p>
+              <h1 className="text-2xl font-black text-foreground font-nunito tracking-tight">Ticket.ao Pro</h1>
+              <p className="text-sm text-muted-foreground font-nunito font-medium">Validador de Bilhetes</p>
             </div>
           </div>
           
@@ -59,9 +59,9 @@ export function AppHeader({ isOnline, totalTickets, hasData = false }: AppHeader
             {hasData && (
               <Button
                 onClick={handleShareSession}
-                variant="secondary"
+                variant="outline"
                 size="sm"
-                className="bg-white/20 text-white hover:bg-white/30 border-white/30"
+                className="bg-gradient-to-r from-primary/10 to-primary/5 text-foreground border-primary/20 hover:bg-primary/10"
               >
                 <Share2 className="h-4 w-4 mr-2" />
                 Partilhar
@@ -71,19 +71,19 @@ export function AppHeader({ isOnline, totalTickets, hasData = false }: AppHeader
             {/* Connection Status */}
             <div className="flex items-center gap-2">
               {isOnline ? (
-                <Wifi className="h-4 w-4 text-green-300" />
+                <Wifi className="h-4 w-4 text-success" />
               ) : (
-                <WifiOff className="h-4 w-4 text-orange-300" />
+                <WifiOff className="h-4 w-4 text-warning" />
               )}
-              <span className="text-xs">
+              <span className="text-xs text-muted-foreground font-medium">
                 {isOnline ? 'Online' : 'Offline'}
               </span>
             </div>
             
             {/* Ticket Count */}
             <div className="flex items-center gap-2">
-              <Ticket className="h-4 w-4" />
-              <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+              <Ticket className="h-4 w-4 text-primary" />
+              <Badge variant="secondary" className="bg-gradient-to-r from-primary/10 to-primary/5 text-foreground border-primary/20">
                 {totalTickets} bilhetes
               </Badge>
             </div>
