@@ -189,48 +189,81 @@ export function QRScanner({ onValidation }: QRScannerProps) {
     try {
       const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
       
-      // Toggle camera direction
-      const newDirection = cameraDirection === 'back' ? 'front' : 'back';
+      console.log(`🔄 Starting camera switch from ${cameraDirection}`);
       
-      console.log(`🔄 Switching from ${cameraDirection} camera to ${newDirection} camera`);
+      // FORCE STOP everything
+      try {
+        await BarcodeScanner.stopScan();
+        console.log('📱 Scanner stopped');
+      } catch (e) {
+        console.log('📱 Scanner was not running');
+      }
       
-      // COMPLETELY stop everything
-      await BarcodeScanner.stopScan();
-      BarcodeScanner.showBackground();
+      try {
+        BarcodeScanner.showBackground();
+        console.log('📱 Background shown');
+      } catch (e) {
+        console.log('📱 Background already visible');
+      }
+      
+      // Remove overlay and reset state
       removeCameraOverlay();
-      
-      // Update state
-      setCameraDirection(newDirection);
       setIsScanning(false);
       
-      console.log(`📱 Camera direction updated to: ${newDirection}`);
+      // Wait for complete cleanup
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Wait longer to ensure complete cleanup
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Toggle direction
+      const newDirection = cameraDirection === 'back' ? 'front' : 'back';
+      setCameraDirection(newDirection);
       
-      // Restart everything from scratch
-      console.log(`🔄 Restarting scanner with ${newDirection} camera`);
+      console.log(`🔄 Camera direction changed to: ${newDirection}`);
+      
+      // Wait for state update
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Start fresh scan
+      console.log(`🎥 Starting fresh scan with ${newDirection} camera`);
+      await startFreshScan(newDirection);
+      
+    } catch (error) {
+      console.error('❌ Complete camera switch error:', error);
+      setIsScanning(false);
+      removeCameraOverlay();
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao alternar câmera',
+        description: 'Reinicie o scanner para tentar novamente.',
+      });
+    }
+  };
+
+  const startFreshScan = async (direction: 'front' | 'back') => {
+    try {
+      const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
+      
       setIsScanning(true);
       
-      // Check permission again
+      // Check permissions
       let status = await BarcodeScanner.checkPermission({ force: false });
+      console.log(`📱 Permission check for ${direction}:`, status);
       
       if (status.granted) {
-        // Make background transparent
+        // Hide background
         BarcodeScanner.hideBackground();
-        console.log('🎥 Background hidden for camera switch');
+        console.log(`🎥 Background hidden for ${direction} camera`);
         
-        // Add overlay with new direction
-        addCameraOverlay(newDirection);
-        console.log(`🎥 Overlay added for ${newDirection} camera`);
+        // Add overlay
+        addCameraOverlay(direction);
+        console.log(`🎥 Overlay added for ${direction} camera`);
         
-        // Start scanning with new camera direction
-        console.log(`🎥 Starting scan with camera: ${newDirection}`);
+        // Start scan with explicit direction
+        console.log(`🎥 Starting scan with explicit direction: ${direction}`);
         const result = await BarcodeScanner.startScan({
-          cameraDirection: newDirection
+          cameraDirection: direction
         });
         
-        console.log(`🎥 Scan started successfully with camera: ${newDirection}`);
+        console.log(`🎥 Scan result with ${direction} camera:`, result);
         
         if (result.hasContent) {
           console.log('📷 QR Code scanned:', result.content);
@@ -246,13 +279,9 @@ export function QRScanner({ onValidation }: QRScannerProps) {
         });
       }
     } catch (error) {
-      console.error('❌ Camera switch error:', error);
+      console.error(`❌ Fresh scan error with ${direction}:`, error);
       setIsScanning(false);
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao alternar câmera',
-        description: 'Não foi possível alterar a câmera.',
-      });
+      removeCameraOverlay();
     }
   };
 
