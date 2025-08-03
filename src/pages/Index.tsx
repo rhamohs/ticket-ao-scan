@@ -7,15 +7,18 @@ import { ValidationHistory } from '@/components/ValidationHistory';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ValidationResult as ValidationResultType } from '@/types/ticket';
-import { ticketDB } from '@/lib/database';
-import { FileText, QrCode, History, RotateCcw } from 'lucide-react';
+import { supabaseTicketDB } from '@/lib/supabaseDatabase';
+import { FileText, QrCode, History, RotateCcw, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Card, CardContent } from '@/components/ui/card';
 
 const Index = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [totalTickets, setTotalTickets] = useState(0);
   const [validationResult, setValidationResult] = useState<ValidationResultType | null>(null);
   const [activeTab, setActiveTab] = useState('import');
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [realtimeUpdates, setRealtimeUpdates] = useState(0);
 
   useEffect(() => {
     // Check online status
@@ -23,37 +26,81 @@ const Index = () => {
     window.addEventListener('online', handleOnlineStatus);
     window.addEventListener('offline', handleOnlineStatus);
 
-    // Initial ticket count
-    setTotalTickets(ticketDB.getTotalTickets());
+    // Initialize Supabase tables and get initial data
+    const initializeApp = async () => {
+      try {
+        await supabaseTicketDB.initializeTables();
+        const count = await supabaseTicketDB.getTotalTickets();
+        setTotalTickets(count);
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('Failed to initialize app:', error);
+        toast({
+          title: 'Erro de inicialização',
+          description: 'Falha ao conectar com a base de dados.',
+          variant: 'destructive'
+        });
+      }
+    };
+
+    initializeApp();
+
+    // Subscribe to real-time updates
+    const subscription = supabaseTicketDB.subscribeToValidations((payload) => {
+      console.log('Real-time update:', payload);
+      setRealtimeUpdates(prev => prev + 1);
+      
+      if (payload.eventType === 'INSERT' && payload.table === 'validation_history') {
+        toast({
+          title: 'Nova validação',
+          description: `Bilhete ${payload.new.qr_code} foi validado por outro utilizador.`,
+        });
+      }
+    });
 
     return () => {
       window.removeEventListener('online', handleOnlineStatus);
       window.removeEventListener('offline', handleOnlineStatus);
+      subscription.unsubscribe();
     };
   }, []);
 
-  const handleImportComplete = (count: number) => {
+  const handleImportComplete = async (count: number) => {
     setTotalTickets(count);
     setActiveTab('scanner');
+    toast({
+      title: 'Importação concluída',
+      description: `${count} bilhetes sincronizados com outros utilizadores.`,
+    });
   };
 
   const handleValidation = (result: ValidationResultType) => {
     setValidationResult(result);
+    // Update ticket count and trigger re-render for real-time sync
+    setRealtimeUpdates(prev => prev + 1);
     // Auto switch to history tab after validation
     setTimeout(() => {
       setActiveTab('history');
     }, 2000);
   };
 
-  const handleClearData = () => {
-    if (confirm('Tem certeza que deseja limpar todos os dados importados e histórico?')) {
-      ticketDB.clear();
-      setTotalTickets(0);
-      setActiveTab('import');
-      toast({
-        title: 'Dados limpos',
-        description: 'Todos os dados foram removidos com sucesso.',
-      });
+  const handleClearData = async () => {
+    if (confirm('Tem certeza que deseja limpar todos os dados importados e histórico? Esta ação afetará todos os utilizadores.')) {
+      try {
+        await supabaseTicketDB.clear();
+        setTotalTickets(0);
+        setActiveTab('import');
+        toast({
+          title: 'Dados limpos',
+          description: 'Todos os dados foram removidos com sucesso.',
+        });
+      } catch (error) {
+        toast({
+          title: 'Erro',
+          description: 'Falha ao limpar os dados.',
+          variant: 'destructive'
+        });
+      }
     }
   };
 
@@ -63,6 +110,19 @@ const Index = () => {
         <div className="space-y-6">
           {/* Header */}
           <AppHeader isOnline={isOnline} totalTickets={totalTickets} />
+
+          {/* Multi-user sync status */}
+          {isInitialized && (
+            <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <Users className="h-4 w-4 text-primary" />
+                  <span className="font-medium text-primary">Modo Multi-utilizador Ativo</span>
+                  <span className="text-muted-foreground">• Sincronização em tempo real entre dispositivos</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Main Content */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

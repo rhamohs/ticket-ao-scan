@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { QrCode, Camera, KeyboardIcon } from 'lucide-react';
-import { ticketDB } from '@/lib/database';
+import { supabaseTicketDB } from '@/lib/supabaseDatabase';
 import { ValidationResult } from '@/types/ticket';
 import { toast } from '@/hooks/use-toast';
 
@@ -23,7 +23,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
     setScannerSupported(isMobile && 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices);
   }, []);
 
-  const validateCode = (qrCode: string) => {
+  const validateCode = async (qrCode: string) => {
     if (!qrCode.trim()) {
       toast({
         variant: 'destructive',
@@ -33,13 +33,21 @@ export function QRScanner({ onValidation }: QRScannerProps) {
       return;
     }
 
-    const result = ticketDB.validateTicket(qrCode.trim());
-    onValidation(result);
-    setManualCode('');
+    try {
+      const result = await supabaseTicketDB.validateTicket(qrCode.trim());
+      onValidation(result);
+      setManualCode('');
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro de validação',
+        description: 'Falha ao conectar com a base de dados.',
+      });
+    }
   };
 
-  const handleManualValidation = () => {
-    validateCode(manualCode);
+  const handleManualValidation = async () => {
+    await validateCode(manualCode);
   };
 
   const startScanning = async () => {
@@ -59,7 +67,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
         const result = await BarcodeScanner.startScan();
         
         if (result.hasContent) {
-          validateCode(result.content);
+          await validateCode(result.content);
         }
       } else {
         toast({
@@ -118,7 +126,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
               variant="scanner"
               size="xl"
               className="w-full"
-              disabled={ticketDB.getTotalTickets() === 0}
+              disabled={false}
             >
               <Camera className="h-5 w-5 mr-2" />
               {isScanning ? 'Parar Scanner' : 'Abrir Scanner'}
@@ -150,20 +158,13 @@ export function QRScanner({ onValidation }: QRScannerProps) {
             />
             <Button 
               onClick={handleManualValidation}
-              disabled={!manualCode.trim() || ticketDB.getTotalTickets() === 0}
+              disabled={!manualCode.trim()}
             >
               Validar
             </Button>
           </div>
         </div>
 
-        {ticketDB.getTotalTickets() === 0 && (
-          <div className="text-center p-4 bg-warning/10 border border-warning/20 rounded-lg">
-            <p className="text-sm text-warning-foreground">
-              ⚠️ Importe uma base de dados CSV primeiro para começar a validar bilhetes
-            </p>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

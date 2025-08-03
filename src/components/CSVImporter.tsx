@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, Download, FileText } from 'lucide-react';
 import { parseCSV, downloadSampleCSV } from '@/lib/csvParser';
-import { ticketDB } from '@/lib/database';
+import { supabaseTicketDB } from '@/lib/supabaseDatabase';
 import { toast } from '@/hooks/use-toast';
 
 interface CSVImporterProps {
@@ -43,15 +43,15 @@ export function CSVImporter({ onImportComplete }: CSVImporterProps) {
         return;
       }
 
-      ticketDB.importTickets(csvData);
+      const count = await supabaseTicketDB.importTickets(csvData);
       
       toast({
         variant: 'default',
         title: 'Sucesso!',
-        description: `${csvData.length} bilhetes importados com sucesso.`,
+        description: `${count} bilhetes importados e sincronizados com outros utilizadores.`,
       });
 
-      onImportComplete(csvData.length);
+      onImportComplete(count);
       
     } catch (error) {
       console.error('Error importing CSV:', error);

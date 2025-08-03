@@ -1,12 +1,47 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { History, CheckCircle, Calendar, Hash } from 'lucide-react';
-import { ticketDB } from '@/lib/database';
+import { supabaseTicketDB } from '@/lib/supabaseDatabase';
+import { ValidationHistory as ValidationHistoryType } from '@/types/ticket';
 
 export function ValidationHistory() {
-  const history = ticketDB.getValidationHistory();
-  const stats = ticketDB.getValidationStats();
+  const [history, setHistory] = useState<ValidationHistoryType[]>([]);
+  const [stats, setStats] = useState({ total: 0, valid: 0, used: 0, validationCount: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [historyData, statsData] = await Promise.all([
+          supabaseTicketDB.getValidationHistory(),
+          supabaseTicketDB.getValidationStats()
+        ]);
+        setHistory(historyData);
+        setStats(statsData);
+      } catch (error) {
+        console.error('Error loading validation data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+
+    // Subscribe to real-time updates
+    const subscription = supabaseTicketDB.subscribeToValidations(async () => {
+      const [historyData, statsData] = await Promise.all([
+        supabaseTicketDB.getValidationHistory(),
+        supabaseTicketDB.getValidationStats()
+      ]);
+      setHistory(historyData);
+      setStats(statsData);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const formatDate = (dateString: string) => {
     try {
@@ -34,25 +69,33 @@ export function ValidationHistory() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Statistics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted rounded-lg">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-primary">{stats.total}</div>
-            <div className="text-xs text-muted-foreground">Total Bilhetes</div>
+        {isLoading ? (
+          <div className="text-center py-8">
+            <div className="text-muted-foreground">Carregando dados...</div>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-success">{stats.valid}</div>
-            <div className="text-xs text-muted-foreground">Válidos</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-warning">{stats.used}</div>
-            <div className="text-xs text-muted-foreground">Usados</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-accent-foreground">{stats.validationCount}</div>
-            <div className="text-xs text-muted-foreground">Validações</div>
-          </div>
-        </div>
+        ) : (
+          <>
+            {/* Statistics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted rounded-lg">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">{stats.total}</div>
+                <div className="text-xs text-muted-foreground">Total Bilhetes</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-success">{stats.valid}</div>
+                <div className="text-xs text-muted-foreground">Válidos</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-warning">{stats.used}</div>
+                <div className="text-xs text-muted-foreground">Usados</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-accent-foreground">{stats.validationCount}</div>
+                <div className="text-xs text-muted-foreground">Validações</div>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* History List */}
         <div className="space-y-3 max-h-96 overflow-y-auto">
