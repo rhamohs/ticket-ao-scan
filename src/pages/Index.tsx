@@ -189,17 +189,6 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="scanner" className="space-y-4">
-              <div className="flex justify-center mb-3 sm:mb-4">
-                <Button
-                  onClick={requestCameraPermission}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 bg-gradient-to-r from-accent/10 to-accent/5 border-accent/30 hover:bg-accent/10 text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4"
-                >
-                  <Camera className="h-3 w-3" />
-                  Autorizar Câmera
-                </Button>
-              </div>
               <QRScanner onValidation={handleValidation} />
             </TabsContent>
 

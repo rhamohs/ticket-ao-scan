@@ -69,6 +69,8 @@ export function QRScanner({ onValidation }: QRScannerProps) {
           cameraDirection: 'back' // Ensures back/main camera is used
         });
         
+        console.log('BarcodeScanner camera direction set to: back');
+        
         if (result.hasContent) {
           await validateCode(result.content);
         }

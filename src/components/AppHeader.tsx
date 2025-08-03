@@ -45,7 +45,7 @@ export function AppHeader({ isOnline, totalTickets, hasData = false }: AppHeader
               <img 
                 src="/lovable-uploads/091193e1-cec0-4c1a-b62b-82f142e730e9.png" 
                 alt="Ticket.ao" 
-                className="h-6 sm:h-8 w-auto"
+                className="h-8 sm:h-12 w-auto"
               />
             </div>
             <div>
@@ -62,9 +62,9 @@ export function AppHeader({ isOnline, totalTickets, hasData = false }: AppHeader
             {hasData && (
               <Button
                 onClick={handleShareSession}
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="bg-gradient-to-r from-primary/10 to-primary/5 text-foreground border-primary/20 hover:bg-primary/10 text-xs sm:text-sm px-2 sm:px-3"
+                className="bg-transparent text-foreground border-0 hover:bg-primary/10 text-xs sm:text-sm px-2 sm:px-3"
               >
                 <Share2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">Partilhar</span>
@@ -87,7 +87,7 @@ export function AppHeader({ isOnline, totalTickets, hasData = false }: AppHeader
             {/* Ticket Count */}
             <div className="flex items-center gap-2">
               <Ticket className="h-4 w-4 text-primary" />
-              <Badge variant="secondary" className="bg-gradient-to-r from-primary/10 to-primary/5 text-foreground border-primary/20">
+              <Badge variant="secondary" className="bg-transparent text-foreground border-0">
                 {totalTickets} bilhetes
               </Badge>
             </div>
