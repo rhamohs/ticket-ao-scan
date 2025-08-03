@@ -1,6 +1,6 @@
 import { Ticket, ValidationHistory } from '@/types/ticket';
 
-class TicketDatabase {
+export class TicketDatabase {
   private tickets: Map<string, Ticket> = new Map();
   private validationHistory: ValidationHistory[] = [];
 
