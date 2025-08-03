@@ -17,14 +17,24 @@ class SupabaseTicketDatabase {
   // Import tickets from CSV data
   async importTickets(csvData: any[]): Promise<number> {
     try {
-      // Clear existing tickets
-      await supabase.from('tickets').delete().gt('id', '');
+      // Clear existing tickets - get all records first then delete by ID
+      const { data: existingTickets } = await supabase.from('tickets').select('id');
+      if (existingTickets && existingTickets.length > 0) {
+        await supabase.from('tickets').delete().in('id', existingTickets.map(t => t.id));
+      }
 
-      const tickets: DbTicket[] = csvData.map((row, index) => {
+      const tickets: Omit<DbTicket, 'created_at' | 'updated_at'>[] = csvData.map((row, index) => {
         console.log('Supabase DB - Processando linha CSV:', row);
+        
+        // Generate a UUID-like id from the URL or use index
+        const originalId = row.ID || row.id || `ticket_${index}`;
+        const ticketId = originalId.includes('attendee_id=') 
+          ? originalId.split('attendee_id=')[1] 
+          : `ticket_${Date.now()}_${index}`;
+        
         const ticket = {
-          id: row.ID || row.id || `ticket_${index}`,
-          qr_code: row['Código QR'] || row.qrCode || row.code,
+          id: ticketId,
+          qr_code: row['Código QR'] || row.qrCode || row.code || originalId,
           name: row['Name'] || row.name || '',
           email: row['Email'] || row.email || '',
           phone: row['Phone'] || row.phone || '',
@@ -191,10 +201,17 @@ class SupabaseTicketDatabase {
   // Clear all data
   async clear(): Promise<void> {
     try {
-      await Promise.all([
-        supabase.from('tickets').delete().gt('id', ''),
-        supabase.from('validation_history').delete().gt('id', '')
-      ]);
+      // Clear tickets
+      const { data: existingTickets } = await supabase.from('tickets').select('id');
+      if (existingTickets && existingTickets.length > 0) {
+        await supabase.from('tickets').delete().in('id', existingTickets.map(t => t.id));
+      }
+      
+      // Clear validation history  
+      const { data: existingHistory } = await supabase.from('validation_history').select('id');
+      if (existingHistory && existingHistory.length > 0) {
+        await supabase.from('validation_history').delete().in('id', existingHistory.map(h => h.id));
+      }
     } catch (error) {
       console.error('Error clearing data:', error);
       throw error;
