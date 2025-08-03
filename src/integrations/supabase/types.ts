@@ -14,7 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      tickets: {
+        Row: {
+          created_at: string
+          email: string | null
+          event_name: string | null
+          id: string
+          name: string | null
+          phone: string | null
+          qr_code: string
+          security_code: string | null
+          status: string
+          updated_at: string
+          validation_count: number
+          validation_date: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          event_name?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+          qr_code: string
+          security_code?: string | null
+          status?: string
+          updated_at?: string
+          validation_count?: number
+          validation_date?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          event_name?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+          qr_code?: string
+          security_code?: string | null
+          status?: string
+          updated_at?: string
+          validation_count?: number
+          validation_date?: string | null
+        }
+        Relationships: []
+      }
+      validation_history: {
+        Row: {
+          created_at: string
+          event_name: string
+          id: string
+          name: string | null
+          qr_code: string
+          status: string
+          ticket_id: string | null
+          validation_date: string
+        }
+        Insert: {
+          created_at?: string
+          event_name: string
+          id?: string
+          name?: string | null
+          qr_code: string
+          status: string
+          ticket_id?: string | null
+          validation_date?: string
+        }
+        Update: {
+          created_at?: string
+          event_name?: string
+          id?: string
+          name?: string | null
+          qr_code?: string
+          status?: string
+          ticket_id?: string | null
+          validation_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "validation_history_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

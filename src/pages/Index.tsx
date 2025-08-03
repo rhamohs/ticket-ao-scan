@@ -19,14 +19,13 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('import');
   const [isInitialized, setIsInitialized] = useState(false);
   const [realtimeUpdates, setRealtimeUpdates] = useState(0);
-  const [isMultiUserMode, setIsMultiUserMode] = useState(false);
+  const [isMultiUserMode, setIsMultiUserMode] = useState(true); // Always multi-user with Supabase
 
   useEffect(() => {
     // Check for multi-user mode in URL
     const urlParams = new URLSearchParams(window.location.search);
     const isMultiMode = urlParams.get('mode') === 'multi';
     if (isMultiMode) {
-      setIsMultiUserMode(true);
       setActiveTab('scanner'); // Go directly to scanner in multi-user mode
     }
 
@@ -44,7 +43,7 @@ const Index = () => {
         setIsInitialized(true);
         
         // Show welcome message for multi-user mode
-        if (isMultiMode && count > 0) {
+        if (count > 0) {
           toast({
             title: 'Modo Multi-utilizador Ativo',
             description: `Conectado à sessão com ${count} bilhetes disponíveis.`,
