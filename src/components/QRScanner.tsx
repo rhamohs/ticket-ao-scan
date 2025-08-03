@@ -188,17 +188,19 @@ export function QRScanner({ onValidation }: QRScannerProps) {
     try {
       const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
       
-      console.log(`Switching from ${cameraDirection} camera`);
+      // Toggle camera direction FIRST
+      const newDirection = cameraDirection === 'back' ? 'front' : 'back';
+      
+      console.log(`🔄 Switching from ${cameraDirection} camera to ${newDirection} camera`);
       
       // Stop current scanning completely and show background
       await BarcodeScanner.stopScan();
       BarcodeScanner.showBackground();
       
-      // Toggle camera direction
-      const newDirection = cameraDirection === 'back' ? 'front' : 'back';
+      // Update state AFTER stopping scan
       setCameraDirection(newDirection);
       
-      console.log(`Switching to ${newDirection} camera`);
+      console.log(`📱 Camera direction updated to: ${newDirection}`);
       
       // Remove current overlay
       removeCameraOverlay();
