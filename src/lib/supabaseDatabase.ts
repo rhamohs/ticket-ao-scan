@@ -38,18 +38,23 @@ class SupabaseTicketDatabase {
       // Clear existing tickets
       await supabase!.from('tickets').delete().neq('id', '');
 
-      const tickets: DbTicket[] = csvData.map((row, index) => ({
-        id: row.ID || row.id || `ticket_${index}`,
-        qr_code: row['Código QR'] || row.qrCode || row.code,
-        name: row['Name'] || row.name || '',
-        email: row['Email'] || row.email || '',
-        phone: row['Phone'] || row.phone || '',
-        security_code: row['Security Code'] || row.securityCode || '',
-        status: this.normalizeStatus(row['Status de Validação'] || row.status || 'valid'),
-        validation_date: row['Data/Hora da Validação'] || row.validationDate,
-        validation_count: parseInt(row['Número de utilizações'] || row.validationCount || '0'),
-        event_name: row['Nome do Evento'] || row.eventName || 'Evento'
-      }));
+      const tickets: DbTicket[] = csvData.map((row, index) => {
+        console.log('Supabase DB - Processando linha CSV:', row);
+        const ticket = {
+          id: row.ID || row.id || `ticket_${index}`,
+          qr_code: row['Código QR'] || row.qrCode || row.code,
+          name: row['Name'] || row.name || '',
+          email: row['Email'] || row.email || '',
+          phone: row['Phone'] || row.phone || '',
+          security_code: row['Security Code'] || row.securityCode || '',
+          status: this.normalizeStatus(row['Status de Validação'] || row.status || 'valid'),
+          validation_date: row['Data/Hora da Validação'] || row.validationDate,
+          validation_count: parseInt(row['Número de utilizações'] || row.validationCount || '0'),
+          event_name: row['Nome do Evento'] || row.eventName || 'Evento'
+        };
+        console.log('Supabase DB - Ticket criado:', ticket);
+        return ticket;
+      });
 
       const { error } = await supabase!
         .from('tickets')
@@ -139,6 +144,9 @@ class SupabaseTicketDatabase {
         validation_date: now,
         validation_count: ticket.validation_count + 1
       };
+
+      console.log('Validação - Ticket encontrado:', ticket);
+      console.log('Validação - Ticket mapeado:', this.mapDbTicketToTicket(updatedTicket));
 
       return {
         success: true,

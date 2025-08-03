@@ -11,6 +11,15 @@ interface ValidationResultProps {
 }
 
 export function ValidationResult({ result, onClose }: ValidationResultProps) {
+  
+  // Debug: log the result received
+  React.useEffect(() => {
+    if (result?.ticket) {
+      console.log('ValidationResult - Ticket recebido:', result.ticket);
+      console.log('ValidationResult - Nome no ticket:', result.ticket.name);
+    }
+  }, [result]);
+
   if (!result) return null;
 
   const getStatusConfig = () => {

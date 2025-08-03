@@ -12,11 +12,16 @@ export class TicketDatabase {
         const ticket: Ticket = {
           id: row.ID || row.id || `ticket_${index}`,
           qrCode: row['Código QR'] || row.qrCode || row.code,
+          name: row['Name'] || row.name || '',
+          email: row['Email'] || row.email || '',
+          phone: row['Phone'] || row.phone || '',
+          securityCode: row['Security Code'] || row.securityCode || '',
           status: this.normalizeStatus(row['Status de Validação'] || row.status || 'valid'),
           validationDate: row['Data/Hora da Validação'] || row.validationDate,
           validationCount: parseInt(row['Número de utilizações'] || row.validationCount || '0'),
           eventName: row['Nome do Evento'] || row.eventName || 'Evento'
         };
+        console.log('Database local - Ticket importado:', ticket);
         this.tickets.set(ticket.qrCode, ticket);
       } catch (error) {
         console.warn(`Error importing ticket at row ${index}:`, error);
@@ -62,6 +67,7 @@ export class TicketDatabase {
       id: `validation_${Date.now()}`,
       ticketId: ticket.id,
       qrCode: ticket.qrCode,
+      name: ticket.name,
       validationDate: ticket.validationDate,
       eventName: ticket.eventName || 'Evento',
       status: 'validated'

@@ -86,17 +86,23 @@ function normalizeCSVData(data: any[]): any[] {
     throw new Error('Não foi possível identificar a coluna do código QR no CSV');
   }
   
-  return data.map(row => ({
-    'ID': row[finalIdField] || `TKT${Math.random().toString(36).substr(2, 9)}`,
-    'Código QR': row[finalQrField] || '',
-    'Name': row[nameField] || '',
-    'Email': row[emailField] || '',
-    'Phone': row[phoneField] || '',
-    'Security Code': row[securityCodeField] || '',
-    'Status de Validação': row[statusField] || 'válido',
-    'Data/Hora da Validação': row[dateField] || '',
-    'Número de utilizações': row[countField] || '0'
-  }));
+  return data.map(row => {
+    const result = {
+      'ID': row[finalIdField] || `TKT${Math.random().toString(36).substr(2, 9)}`,
+      'Código QR': row[finalQrField] || '',
+      'Name': row[nameField] || '',
+      'Email': row[emailField] || '',
+      'Phone': row[phoneField] || '',
+      'Security Code': row[securityCodeField] || '',
+      'Status de Validação': row[statusField] || 'válido',
+      'Data/Hora da Validação': row[dateField] || '',
+      'Número de utilizações': row[countField] || '0'
+    };
+    
+    console.log('CSV Parser - Nome encontrado:', row[nameField]);
+    console.log('CSV Parser - Resultado final:', result);
+    return result;
+  });
 }
 
 export function parseCSV(file: File): Promise<any[]> {

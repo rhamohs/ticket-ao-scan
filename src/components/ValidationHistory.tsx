@@ -53,16 +53,22 @@ export function ValidationHistory() {
         supabaseTicketDB.getValidationStats()
       ]);
       
-      // Map the data to match our interface
-      const mappedHistory = historyData.map(item => ({
-        id: item.id,
-        qrCode: item.qrCode,
-        name: item.name,
-        eventName: item.eventName,
-        status: item.status as 'valid' | 'used' | 'not_found',
-        validationDate: item.validationDate
-      }));
+      console.log('ValidationHistory - Dados brutos do histórico:', historyData);
       
+      // Map the data to match our interface
+      const mappedHistory = historyData.map(item => {
+        console.log('ValidationHistory - Item individual:', item);
+        return {
+          id: item.id,
+          qrCode: item.qrCode,
+          name: item.name,
+          eventName: item.eventName,
+          status: item.status as 'valid' | 'used' | 'not_found',
+          validationDate: item.validationDate
+        };
+      });
+      
+      console.log('ValidationHistory - Dados mapeados:', mappedHistory);
       setHistory(mappedHistory);
       setStats(statsData);
     } catch (error) {
