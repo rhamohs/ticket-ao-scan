@@ -2,6 +2,10 @@
 CREATE TABLE IF NOT EXISTS tickets (
   id TEXT PRIMARY KEY,
   qr_code TEXT UNIQUE NOT NULL,
+  name TEXT,
+  email TEXT,
+  phone TEXT,
+  security_code TEXT,
   status TEXT CHECK (status IN ('valid', 'used', 'invalid')) DEFAULT 'valid',
   validation_date TIMESTAMPTZ,
   validation_count INTEGER DEFAULT 0,
@@ -15,6 +19,7 @@ CREATE TABLE IF NOT EXISTS validation_history (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   ticket_id TEXT REFERENCES tickets(id),
   qr_code TEXT NOT NULL,
+  name TEXT,
   validation_date TIMESTAMPTZ NOT NULL,
   event_name TEXT NOT NULL,
   status TEXT NOT NULL,

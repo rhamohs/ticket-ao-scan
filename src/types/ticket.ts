@@ -2,6 +2,9 @@ export interface Ticket {
   id: string;
   qrCode: string;
   name?: string;
+  email?: string;
+  phone?: string;
+  securityCode?: string;
   status: 'valid' | 'used' | 'invalid';
   validationDate?: string;
   validationCount: number;

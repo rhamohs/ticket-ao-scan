@@ -20,6 +20,10 @@ export const supabase = createSupabaseClient()
 export interface DbTicket {
   id: string
   qr_code: string
+  name?: string
+  email?: string
+  phone?: string
+  security_code?: string
   status: 'valid' | 'used' | 'invalid'
   validation_date?: string
   validation_count: number
@@ -32,6 +36,7 @@ export interface DbValidationHistory {
   id: string
   ticket_id: string
   qr_code: string
+  name?: string
   validation_date: string
   event_name: string
   status: string

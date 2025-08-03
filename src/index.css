@@ -22,10 +22,10 @@ All colors MUST be HSL.
     --primary: 14 100% 57%;
     --primary-foreground: 0 0% 98%;
     
-    /* Professional gradient theme - same as multi-user card */
-    --header-gradient-start: 217 91% 60%;
-    --header-gradient-end: 224 76% 48%;
-    --header-foreground: 0 0% 98%;
+    /* Professional gradient theme - soft beige/tan color */
+    --header-gradient-start: 43 100% 96%;
+    --header-gradient-end: 43 100% 90%;
+    --header-foreground: 43 50% 25%;
 
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;

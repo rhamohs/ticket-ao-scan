@@ -41,6 +41,10 @@ class SupabaseTicketDatabase {
       const tickets: DbTicket[] = csvData.map((row, index) => ({
         id: row.ID || row.id || `ticket_${index}`,
         qr_code: row['Código QR'] || row.qrCode || row.code,
+        name: row['Name'] || row.name || '',
+        email: row['Email'] || row.email || '',
+        phone: row['Phone'] || row.phone || '',
+        security_code: row['Security Code'] || row.securityCode || '',
         status: this.normalizeStatus(row['Status de Validação'] || row.status || 'valid'),
         validation_date: row['Data/Hora da Validação'] || row.validationDate,
         validation_count: parseInt(row['Número de utilizações'] || row.validationCount || '0'),
@@ -121,6 +125,7 @@ class SupabaseTicketDatabase {
         .insert({
           ticket_id: ticket.id,
           qr_code: ticket.qr_code,
+          name: ticket.name || '',
           validation_date: now,
           event_name: ticket.event_name || 'Evento',
           status: 'validated'
@@ -271,6 +276,10 @@ class SupabaseTicketDatabase {
     return {
       id: dbTicket.id,
       qrCode: dbTicket.qr_code,
+      name: dbTicket.name,
+      email: dbTicket.email,
+      phone: dbTicket.phone,
+      securityCode: dbTicket.security_code,
       status: dbTicket.status,
       validationDate: dbTicket.validation_date,
       validationCount: dbTicket.validation_count,
@@ -283,6 +292,7 @@ class SupabaseTicketDatabase {
       id: dbHistory.id,
       ticketId: dbHistory.ticket_id,
       qrCode: dbHistory.qr_code,
+      name: dbHistory.name,
       validationDate: dbHistory.validation_date,
       eventName: dbHistory.event_name,
       status: dbHistory.status

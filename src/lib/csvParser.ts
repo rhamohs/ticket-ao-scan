@@ -57,12 +57,16 @@ function normalizeCSVData(data: any[]): any[] {
   const statusField = findFieldMapping(headers, 'status');
   const dateField = findFieldMapping(headers, 'date');
   const countField = findFieldMapping(headers, 'count');
+  const nameField = findFieldMapping(headers, 'name');
+  const emailField = findFieldMapping(headers, 'email');
+  const phoneField = findFieldMapping(headers, 'phone');
+  const securityCodeField = findFieldMapping(headers, 'securityCode');
   
   // If we can't find at least ID and QR Code, try to guess from position
   let finalIdField = idField || headers[0];
   let finalQrField = qrField;
   
-  // If no QR field found, look for URL-like content or second column
+  // If no QR field found, look for URL-like content or first column
   if (!finalQrField) {
     for (const header of headers) {
       const sampleValue = data[0][header];
@@ -72,9 +76,9 @@ function normalizeCSVData(data: any[]): any[] {
         break;
       }
     }
-    // Fallback to second column if available
-    if (!finalQrField && headers.length > 1) {
-      finalQrField = headers[1];
+    // Fallback to first column if available (QR Code URL is usually first)
+    if (!finalQrField && headers.length > 0) {
+      finalQrField = headers[0];
     }
   }
   
@@ -85,6 +89,10 @@ function normalizeCSVData(data: any[]): any[] {
   return data.map(row => ({
     'ID': row[finalIdField] || `TKT${Math.random().toString(36).substr(2, 9)}`,
     'Código QR': row[finalQrField] || '',
+    'Name': row[nameField] || '',
+    'Email': row[emailField] || '',
+    'Phone': row[phoneField] || '',
+    'Security Code': row[securityCodeField] || '',
     'Status de Validação': row[statusField] || 'válido',
     'Data/Hora da Validação': row[dateField] || '',
     'Número de utilizações': row[countField] || '0'
