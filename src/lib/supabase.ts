@@ -1,20 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Get Supabase credentials from environment or default values for development
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+// Use direct Supabase configuration (no env variables needed in Lovable)
+const supabaseUrl = 'https://ovwtfvbxfycicxzmeoim.supabase.co'
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92d3RmdmJ4ZnljaWN4em1lb2ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMjMzNTgsImV4cCI6MjA2OTc5OTM1OH0.u2vC-iIjPrV-BODr2m3uOGlQgzzydqfn4N9s_pkMNgI'
 
-// Create a function to initialize Supabase client
-const createSupabaseClient = () => {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Supabase environment variables not found. Using fallback configuration.')
-    // Return a mock client for development when Supabase isn't configured
-    return null
-  }
-  return createClient(supabaseUrl, supabaseAnonKey)
-}
-
-export const supabase = createSupabaseClient()
+// Create Supabase client
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Database types
 export interface DbTicket {

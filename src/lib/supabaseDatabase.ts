@@ -1,42 +1,24 @@
 import { supabase, DbTicket, DbValidationHistory } from './supabase';
 import { Ticket, ValidationHistory } from '@/types/ticket';
-import { TicketDatabase } from './database';
 
 class SupabaseTicketDatabase {
-  private fallbackDB = new TicketDatabase();
-  private isSupabaseAvailable = !!supabase;
-
   // Initialize tables if they don't exist
   async initializeTables() {
-    if (!this.isSupabaseAvailable) {
-      console.warn('Supabase not available, using local database');
-      return;
-    }
-
     try {
-      // Create tickets table
-      const { error: ticketsError } = await supabase.rpc('create_tickets_table_if_not_exists');
-      if (ticketsError) console.warn('Tickets table creation:', ticketsError);
-
-      // Create validation_history table
-      const { error: historyError } = await supabase.rpc('create_validation_history_table_if_not_exists');
-      if (historyError) console.warn('Validation history table creation:', historyError);
+      // Tables are already created via migration, just verify they exist
+      const { data: tables } = await supabase.from('tickets').select('id').limit(1);
+      console.log('Supabase tables verified');
     } catch (error) {
-      console.warn('Table initialization error:', error);
-      this.isSupabaseAvailable = false;
+      console.error('Failed to verify Supabase tables:', error);
+      throw error;
     }
   }
 
   // Import tickets from CSV data
   async importTickets(csvData: any[]): Promise<number> {
-    if (!this.isSupabaseAvailable) {
-      this.fallbackDB.importTickets(csvData);
-      return csvData.length;
-    }
-
     try {
       // Clear existing tickets
-      await supabase!.from('tickets').delete().neq('id', '');
+      await supabase.from('tickets').delete().neq('id', '');
 
       const tickets: DbTicket[] = csvData.map((row, index) => {
         console.log('Supabase DB - Processando linha CSV:', row);
@@ -56,19 +38,18 @@ class SupabaseTicketDatabase {
         return ticket;
       });
 
-      const { error } = await supabase!
-        .from('tickets')
-        .upsert(tickets, { onConflict: 'qr_code' });
+      if (tickets.length > 0) {
+        const { error: insertError } = await supabase
+          .from('tickets')
+          .upsert(tickets, { onConflict: 'qr_code' });
+        
+        if (insertError) throw insertError;
+      }
 
-      if (error) throw error;
-
-      return tickets.length;
-    } catch (error) {
-      console.error('Error importing tickets:', error);
-      // Fallback to local database
-      this.isSupabaseAvailable = false;
-      this.fallbackDB.importTickets(csvData);
       return csvData.length;
+    } catch (error) {
+      console.error('Supabase import failed:', error);
+      throw error;
     }
   }
 
@@ -81,13 +62,9 @@ class SupabaseTicketDatabase {
 
   // Validate a QR code
   async validateTicket(qrCode: string): Promise<{ success: boolean; ticket?: Ticket; message: string; status: 'valid' | 'used' | 'not_found' }> {
-    if (!this.isSupabaseAvailable) {
-      return this.fallbackDB.validateTicket(qrCode);
-    }
-
     try {
       // Get ticket from database
-      const { data: ticket, error } = await supabase!
+      const { data: ticket, error } = await supabase
         .from('tickets')
         .select('*')
         .eq('qr_code', qrCode)
@@ -105,93 +82,79 @@ class SupabaseTicketDatabase {
         return {
           success: false,
           ticket: this.mapDbTicketToTicket(ticket),
-          message: `Ingresso já usado. Primeira validação: ${ticket.validation_date || 'N/A'}`,
+          message: `Ingresso já foi utilizado em ${new Date(ticket.validation_date || '').toLocaleString('pt-BR')}`,
           status: 'used'
         };
       }
 
-      // Mark as used and record validation
-      const now = new Date().toISOString();
-      const { error: updateError } = await supabase!
+      // Update ticket status to used
+      const { error: updateError } = await supabase
         .from('tickets')
         .update({
           status: 'used',
-          validation_date: now,
-          validation_count: ticket.validation_count + 1,
-          updated_at: now
+          validation_date: new Date().toISOString(),
+          validation_count: ticket.validation_count + 1
         })
-        .eq('qr_code', qrCode);
+        .eq('id', ticket.id);
 
       if (updateError) throw updateError;
 
-      // Add to validation history
-      const { error: historyError } = await supabase!
-        .from('validation_history')
-        .insert({
-          ticket_id: ticket.id,
-          qr_code: ticket.qr_code,
-          name: ticket.name || '',
-          validation_date: now,
-          event_name: ticket.event_name || 'Evento',
-          status: 'validated'
-        });
-
-      if (historyError) throw historyError;
-
-      const updatedTicket = {
-        ...ticket,
-        status: 'used' as const,
-        validation_date: now,
-        validation_count: ticket.validation_count + 1
+      // Record validation in history
+      const historyRecord: Omit<DbValidationHistory, 'id' | 'created_at'> = {
+        ticket_id: ticket.id,
+        qr_code: ticket.qr_code,
+        name: ticket.name || '',
+        validation_date: new Date().toISOString(),
+        event_name: ticket.event_name || 'Evento',
+        status: 'validated'
       };
 
-      console.log('Validação - Ticket encontrado:', ticket);
-      console.log('Validação - Ticket mapeado:', this.mapDbTicketToTicket(updatedTicket));
+      const { error: historyError } = await supabase
+        .from('validation_history')
+        .insert([historyRecord]);
+
+      if (historyError) console.warn('Error saving validation history:', historyError);
+
+      const validatedTicket = this.mapDbTicketToTicket({
+        ...ticket,
+        status: 'used',
+        validation_date: new Date().toISOString(),
+        validation_count: ticket.validation_count + 1
+      });
 
       return {
         success: true,
-        ticket: this.mapDbTicketToTicket(updatedTicket),
-        message: 'Ingresso válido',
+        ticket: validatedTicket,
+        message: `Ingresso validado com sucesso para ${ticket.name || 'utilizador'}`,
         status: 'valid'
       };
     } catch (error) {
       console.error('Error validating ticket:', error);
-      // Fallback to local database
-      this.isSupabaseAvailable = false;
-      return this.fallbackDB.validateTicket(qrCode);
+      throw error;
     }
   }
 
   // Get validation history
   async getValidationHistory(): Promise<ValidationHistory[]> {
-    if (!this.isSupabaseAvailable) {
-      return this.fallbackDB.getValidationHistory();
-    }
-
     try {
-      const { data, error } = await supabase!
+      const { data, error } = await supabase
         .from('validation_history')
         .select('*')
-        .order('validation_date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      return data.map(this.mapDbHistoryToHistory);
+      return (data || []).map(this.mapDbHistoryToHistory);
     } catch (error) {
       console.error('Error getting validation history:', error);
-      this.isSupabaseAvailable = false;
-      return this.fallbackDB.getValidationHistory();
+      throw error;
     }
   }
 
-  // Get total tickets imported
+  // Get total tickets count
   async getTotalTickets(): Promise<number> {
-    if (!this.isSupabaseAvailable) {
-      return this.fallbackDB.getTotalTickets();
-    }
-
     try {
-      const { count, error } = await supabase!
+      const { count, error } = await supabase
         .from('tickets')
         .select('*', { count: 'exact', head: true });
 
@@ -199,84 +162,71 @@ class SupabaseTicketDatabase {
       return count || 0;
     } catch (error) {
       console.error('Error getting total tickets:', error);
-      this.isSupabaseAvailable = false;
-      return this.fallbackDB.getTotalTickets();
+      throw error;
     }
   }
 
-  // Get validation stats
+  // Get validation statistics
   async getValidationStats() {
-    if (!this.isSupabaseAvailable) {
-      return this.fallbackDB.getValidationStats();
-    }
-
     try {
-      const { data: tickets, error } = await supabase!
-        .from('tickets')
-        .select('status');
-
-      if (error) throw error;
-
-      const total = tickets.length;
-      const used = tickets.filter(t => t.status === 'used').length;
-      const valid = total - used;
-
-      const { count: validationCount, error: countError } = await supabase!
-        .from('validation_history')
-        .select('*', { count: 'exact', head: true });
-
-      if (countError) throw countError;
+      const [totalResult, validResult, usedResult, validationCountResult] = await Promise.all([
+        supabase.from('tickets').select('*', { count: 'exact', head: true }),
+        supabase.from('tickets').select('*', { count: 'exact', head: true }).eq('status', 'valid'),
+        supabase.from('tickets').select('*', { count: 'exact', head: true }).eq('status', 'used'),
+        supabase.from('validation_history').select('*', { count: 'exact', head: true })
+      ]);
 
       return {
-        total,
-        used,
-        valid,
-        validationCount: validationCount || 0
+        total: totalResult.count || 0,
+        valid: validResult.count || 0,
+        used: usedResult.count || 0,
+        validationCount: validationCountResult.count || 0
       };
     } catch (error) {
       console.error('Error getting validation stats:', error);
-      this.isSupabaseAvailable = false;
-      return this.fallbackDB.getValidationStats();
+      throw error;
     }
   }
 
   // Clear all data
   async clear(): Promise<void> {
-    if (!this.isSupabaseAvailable) {
-      this.fallbackDB.clear();
-      return;
-    }
-
     try {
       await Promise.all([
-        supabase!.from('tickets').delete().neq('id', ''),
-        supabase!.from('validation_history').delete().neq('id', '')
+        supabase.from('tickets').delete().neq('id', ''),
+        supabase.from('validation_history').delete().neq('id', '')
       ]);
     } catch (error) {
       console.error('Error clearing data:', error);
-      this.isSupabaseAvailable = false;
-      this.fallbackDB.clear();
+      throw error;
     }
   }
 
-  // Subscribe to real-time changes
+  // Subscribe to real-time validation updates
   subscribeToValidations(callback: (payload: any) => void) {
-    if (!this.isSupabaseAvailable || !supabase) {
-      console.warn('Supabase not available, real-time subscriptions disabled');
-      return { unsubscribe: () => {} };
-    }
+    try {
+      const channel = supabase
+        .channel('validation-updates')
+        .on('postgres_changes', 
+          { event: 'INSERT', schema: 'public', table: 'validation_history' }, 
+          callback
+        )
+        .on('postgres_changes', 
+          { event: 'UPDATE', schema: 'public', table: 'tickets' }, 
+          callback
+        )
+        .subscribe();
 
-    return supabase
-      .channel('validation_changes')
-      .on('postgres_changes', 
-        { event: 'INSERT', schema: 'public', table: 'validation_history' }, 
-        callback
-      )
-      .on('postgres_changes', 
-        { event: 'UPDATE', schema: 'public', table: 'tickets' }, 
-        callback
-      )
-      .subscribe();
+      return {
+        unsubscribe: () => {
+          supabase.removeChannel(channel);
+        }
+      };
+    } catch (error) {
+      console.error('Error setting up real-time subscriptions:', error);
+      return {
+        unsubscribe: () => {}
+      };
+    }
   }
 
   // Helper methods
@@ -284,14 +234,14 @@ class SupabaseTicketDatabase {
     return {
       id: dbTicket.id,
       qrCode: dbTicket.qr_code,
-      name: dbTicket.name,
-      email: dbTicket.email,
-      phone: dbTicket.phone,
-      securityCode: dbTicket.security_code,
+      name: dbTicket.name || '',
+      email: dbTicket.email || '',
+      phone: dbTicket.phone || '',
+      securityCode: dbTicket.security_code || '',
       status: dbTicket.status,
       validationDate: dbTicket.validation_date,
       validationCount: dbTicket.validation_count,
-      eventName: dbTicket.event_name
+      eventName: dbTicket.event_name || 'Evento'
     };
   }
 
@@ -300,7 +250,7 @@ class SupabaseTicketDatabase {
       id: dbHistory.id,
       ticketId: dbHistory.ticket_id,
       qrCode: dbHistory.qr_code,
-      name: dbHistory.name,
+      name: dbHistory.name || '',
       validationDate: dbHistory.validation_date,
       eventName: dbHistory.event_name,
       status: dbHistory.status
@@ -308,4 +258,5 @@ class SupabaseTicketDatabase {
   }
 }
 
+// Export a singleton instance
 export const supabaseTicketDB = new SupabaseTicketDatabase();
