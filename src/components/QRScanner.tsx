@@ -179,14 +179,14 @@ export function QRScanner({ onValidation }: QRScannerProps) {
     try {
       const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
       
-      // Stop current scanning
-      BarcodeScanner.stopScan();
+      // Stop current scanning completely
+      await BarcodeScanner.stopScan();
       
       // Toggle camera direction
       const newDirection = cameraDirection === 'back' ? 'front' : 'back';
       setCameraDirection(newDirection);
       
-      // Update overlay button text
+      // Update overlay button text immediately
       const overlay = document.getElementById('camera-overlay');
       if (overlay) {
         const switchButton = overlay.querySelector('button');
@@ -200,6 +200,9 @@ export function QRScanner({ onValidation }: QRScannerProps) {
           `;
         }
       }
+      
+      // Wait a moment before restarting to ensure camera is released
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Restart scanning with new camera direction
       const result = await BarcodeScanner.startScan({
