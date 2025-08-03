@@ -65,10 +65,41 @@ export function QRScanner({ onValidation }: QRScannerProps) {
         // Hide background and show scanner
         document.body.classList.add('scanner-active');
         
-        // Prepare scanner with camera direction
+        // For camera selection, we need to use a different approach
+        // Since @capacitor-community/barcode-scanner doesn't support camera selection
+        // We'll use navigator.mediaDevices to check available cameras first
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const videoDevices = devices.filter(device => device.kind === 'videoinput');
+          console.log('📹 Available cameras:', videoDevices.length);
+          
+          // Find the desired camera
+          let deviceId = undefined;
+          if (cameraDirection === 'front') {
+            const frontCamera = videoDevices.find(device => 
+              device.label.toLowerCase().includes('front') || 
+              device.label.toLowerCase().includes('user') ||
+              device.label.toLowerCase().includes('selfie')
+            );
+            deviceId = frontCamera?.deviceId;
+          } else {
+            const backCamera = videoDevices.find(device => 
+              device.label.toLowerCase().includes('back') || 
+              device.label.toLowerCase().includes('rear') ||
+              device.label.toLowerCase().includes('environment')
+            );
+            deviceId = backCamera?.deviceId || videoDevices[0]?.deviceId;
+          }
+          
+          console.log(`📹 Selected camera: ${cameraDirection}, deviceId: ${deviceId}`);
+        } catch (error) {
+          console.log('📹 Could not enumerate cameras, using default');
+        }
+        
+        // Prepare scanner
         await BarcodeScanner.prepare();
         
-        // Start scanning
+        // Start scanning - note: camera selection limitation in this plugin
         const result = await BarcodeScanner.startScan({
           targetedFormats: ['QR_CODE', 'EAN_13', 'EAN_8', 'CODE_128'],
         });
