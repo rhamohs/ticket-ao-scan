@@ -41,16 +41,19 @@ export function AppHeader({ isOnline, totalTickets, hasData = false }: AppHeader
       <CardContent className="p-2 sm:p-4">
         <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-0">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-1.5 sm:p-2 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/20">
+            <div className="p-1.5 sm:p-2 bg-transparent rounded-xl">
               <img 
-                src="/lovable-uploads/4286576c-38a4-4fc4-902b-608c593ecc24.png" 
+                src="/lovable-uploads/091193e1-cec0-4c1a-b62b-82f142e730e9.png" 
                 alt="Ticket.ao" 
                 className="h-6 sm:h-8 w-auto"
               />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-4xl font-black text-foreground font-nunito tracking-tight bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">ticket.ao Pro</h1>
-              <p className="text-sm sm:text-lg text-muted-foreground font-nunito font-semibold">Dashboard de Validação</p>
+              <h1 className="text-2xl sm:text-4xl font-black font-nunito tracking-tight">
+                <span style={{ color: '#ff3300' }}>ticket.ao</span>{' '}
+                <span className="text-foreground">Pro</span>
+              </h1>
+              <p className="text-sm sm:text-lg text-muted-foreground font-nunito font-semibold">Validador de Bilhetes</p>
             </div>
           </div>
           

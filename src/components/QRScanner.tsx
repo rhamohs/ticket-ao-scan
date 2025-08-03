@@ -57,16 +57,16 @@ export function QRScanner({ onValidation }: QRScannerProps) {
       // Import barcode scanner dynamically for web compatibility
       const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
       
-      // Always request permission when opening camera
+      // Request permission automatically when opening camera
       const status = await BarcodeScanner.checkPermission({ force: true });
       
       if (status.granted) {
         // Make background transparent
         BarcodeScanner.hideBackground();
         
-        // Configure to use back camera by default
+        // Configure to use back camera (main camera) by default
         const result = await BarcodeScanner.startScan({
-          cameraDirection: 'back'
+          cameraDirection: 'back' // Ensures back/main camera is used
         });
         
         if (result.hasContent) {
