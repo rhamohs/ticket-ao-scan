@@ -30,7 +30,7 @@ class SupabaseTicketDatabase {
           phone: row['Phone'] || row.phone || '',
           security_code: row['Security Code'] || row.securityCode || '',
           status: this.normalizeStatus(row['Status de Validação'] || row.status || 'valid'),
-          validation_date: row['Data/Hora da Validação'] || row.validationDate,
+          validation_date: row['Data/Hora da Validação'] && row['Data/Hora da Validação'].trim() ? row['Data/Hora da Validação'] : null,
           validation_count: parseInt(row['Número de utilizações'] || row.validationCount || '0'),
           event_name: row['Nome do Evento'] || row.eventName || 'Evento'
         };
@@ -56,8 +56,8 @@ class SupabaseTicketDatabase {
   private normalizeStatus(status: string): 'valid' | 'used' | 'invalid' {
     const normalized = status.toLowerCase();
     if (normalized.includes('usado') || normalized.includes('used')) return 'used';
-    if (normalized.includes('válido') || normalized.includes('valid')) return 'valid';
-    return 'invalid';
+    if (normalized.includes('válido') || normalized.includes('valid') || normalized.includes('ingresso')) return 'valid';
+    return 'valid'; // Default to valid instead of invalid
   }
 
   // Validate a QR code
