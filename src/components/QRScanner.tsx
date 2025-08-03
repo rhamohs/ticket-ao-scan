@@ -53,49 +53,80 @@ export function QRScanner({ onValidation }: QRScannerProps) {
 
   const startScanning = async () => {
     console.log(`🎥 Starting scanner with direction: ${cameraDirection}`);
+    console.log(`🌐 Current environment: ${navigator.userAgent}`);
     setIsScanning(true);
     
     try {
-      // Import the new MLKit barcode scanner
+      // Check if we're in mobile environment first
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      console.log(`📱 Is mobile device: ${isMobile}`);
+      
+      if (!isMobile) {
+        throw new Error('Scanner only works on mobile devices');
+      }
+
+      // Try to import the MLKit barcode scanner
+      console.log('📦 Importing @capacitor-mlkit/barcode-scanning...');
       const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+      console.log('✅ MLKit scanner imported successfully');
       
       // Request permission
-      console.log('📱 Requesting permission...');
+      console.log('📱 Requesting camera permission...');
       const permission = await BarcodeScanner.requestPermissions();
       console.log('📱 Permission result:', permission);
       
       if (permission.camera === 'granted') {
+        console.log('✅ Camera permission granted');
+        
         // Check if scanner is supported
+        console.log('🔍 Checking if scanner is supported...');
         const isSupported = await BarcodeScanner.isSupported();
-        console.log('📱 Scanner supported:', isSupported);
+        console.log('📱 Scanner support check:', isSupported);
         
         if (isSupported.supported) {
           console.log(`🎥 Starting scan with camera: ${cameraDirection}`);
           
-          // Start scanning - the new plugin handles camera selection differently
+          // Start scanning
           const scanResult = await BarcodeScanner.scan();
-          
-          console.log('📱 Scan result:', scanResult);
+          console.log('📱 Scan completed, result:', scanResult);
           
           if (scanResult.barcodes && scanResult.barcodes.length > 0) {
             const qrCode = scanResult.barcodes[0].rawValue;
             console.log('📷 QR Code scanned:', qrCode);
             await validateCode(qrCode);
+          } else {
+            console.log('❌ No barcodes found in scan result');
           }
         } else {
-          throw new Error('Scanner not supported');
+          console.log('❌ Scanner not supported on this device');
+          throw new Error('Scanner not supported on this device');
         }
       } else {
+        console.log('❌ Camera permission denied:', permission);
         throw new Error('Camera permission denied');
       }
     } catch (error) {
-      console.error('❌ Scanner error:', error);
+      console.error('❌ Detailed scanner error:', error);
+      console.error('❌ Error stack:', error.stack);
+      console.error('❌ Expected camera direction:', cameraDirection);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Não foi possível iniciar o scanner.';
+      if (error.message.includes('permission')) {
+        errorMessage = 'Permissão da câmera negada. Autorize o acesso à câmera nas configurações.';
+      } else if (error.message.includes('not supported')) {
+        errorMessage = 'Scanner não suportado neste dispositivo.';
+      } else if (error.message.includes('mobile')) {
+        errorMessage = 'Scanner disponível apenas em dispositivos móveis.';
+      }
+      
       toast({
         variant: 'destructive',
         title: 'Erro do scanner',
-        description: 'Não foi possível iniciar o scanner. Use a entrada manual.',
+        description: errorMessage,
       });
     } finally {
+      console.log('🔄 Setting scanning to false');
       setIsScanning(false);
     }
   };
