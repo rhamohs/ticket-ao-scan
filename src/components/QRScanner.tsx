@@ -189,43 +189,65 @@ export function QRScanner({ onValidation }: QRScannerProps) {
     try {
       const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
       
-      // Toggle camera direction FIRST
+      // Toggle camera direction
       const newDirection = cameraDirection === 'back' ? 'front' : 'back';
       
       console.log(`🔄 Switching from ${cameraDirection} camera to ${newDirection} camera`);
       
-      // Stop current scanning completely and show background
+      // COMPLETELY stop everything
       await BarcodeScanner.stopScan();
       BarcodeScanner.showBackground();
+      removeCameraOverlay();
       
-      // Update state AFTER stopping scan
+      // Update state
       setCameraDirection(newDirection);
+      setIsScanning(false);
       
       console.log(`📱 Camera direction updated to: ${newDirection}`);
       
-      // Remove current overlay
-      removeCameraOverlay();
+      // Wait longer to ensure complete cleanup
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Wait a moment to ensure camera is fully released
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Restart everything from scratch
+      console.log(`🔄 Restarting scanner with ${newDirection} camera`);
+      setIsScanning(true);
       
-      // Hide background and add new overlay with correct direction
-      BarcodeScanner.hideBackground();
-      addCameraOverlay(newDirection);
+      // Check permission again
+      let status = await BarcodeScanner.checkPermission({ force: false });
       
-      // Start scanning with new camera direction
-      const result = await BarcodeScanner.startScan({
-        cameraDirection: newDirection
-      });
-      
-      console.log(`BarcodeScanner restarted with camera: ${newDirection}`);
-      
-      if (result.hasContent) {
-        await validateCode(result.content);
-        removeCameraOverlay();
+      if (status.granted) {
+        // Make background transparent
+        BarcodeScanner.hideBackground();
+        console.log('🎥 Background hidden for camera switch');
+        
+        // Add overlay with new direction
+        addCameraOverlay(newDirection);
+        console.log(`🎥 Overlay added for ${newDirection} camera`);
+        
+        // Start scanning with new camera direction
+        console.log(`🎥 Starting scan with camera: ${newDirection}`);
+        const result = await BarcodeScanner.startScan({
+          cameraDirection: newDirection
+        });
+        
+        console.log(`🎥 Scan started successfully with camera: ${newDirection}`);
+        
+        if (result.hasContent) {
+          console.log('📷 QR Code scanned:', result.content);
+          await validateCode(result.content);
+          removeCameraOverlay();
+        }
+      } else {
+        setIsScanning(false);
+        toast({
+          variant: 'destructive',
+          title: 'Permissão necessária',
+          description: 'Autorize o acesso à câmera.',
+        });
       }
     } catch (error) {
-      console.error('Camera switch error:', error);
+      console.error('❌ Camera switch error:', error);
+      setIsScanning(false);
       toast({
         variant: 'destructive',
         title: 'Erro ao alternar câmera',
