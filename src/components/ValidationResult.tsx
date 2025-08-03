@@ -98,8 +98,8 @@ export function ValidationResult({ result, onClose }: ValidationResultProps) {
             {result.ticket && (
               <div className="space-y-2 text-sm bg-white/10 p-3 rounded-lg">
                 <div className="flex justify-between">
-                  <span className="font-medium">ID do Bilhete:</span>
-                  <span>{result.ticket.id}</span>
+                  <span className="font-medium">Nome:</span>
+                  <span>{result.ticket.name || result.ticket.id}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Código QR:</span>

@@ -1,6 +1,7 @@
 export interface Ticket {
   id: string;
   qrCode: string;
+  name?: string;
   status: 'valid' | 'used' | 'invalid';
   validationDate?: string;
   validationCount: number;
@@ -18,6 +19,7 @@ export interface ValidationHistory {
   id: string;
   ticketId: string;
   qrCode: string;
+  name?: string;
   validationDate: string;
   eventName: string;
   status: string;

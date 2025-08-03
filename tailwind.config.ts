@@ -31,10 +31,9 @@ export default {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'
 				},
-				golden: {
-					DEFAULT: 'hsl(var(--golden))',
-					foreground: 'hsl(var(--golden-foreground))'
-				},
+				'header-gradient-start': 'hsl(var(--header-gradient-start))',
+				'header-gradient-end': 'hsl(var(--header-gradient-end))',
+				'header-foreground': 'hsl(var(--header-foreground))',
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
 					foreground: 'hsl(var(--secondary-foreground))'

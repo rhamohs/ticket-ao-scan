@@ -37,7 +37,7 @@ export function AppHeader({ isOnline, totalTickets, hasData = false }: AppHeader
     }
   };
   return (
-    <Card className="w-full bg-gradient-to-r from-golden to-golden/80 text-golden-foreground border-0">
+    <Card className="w-full bg-gradient-to-r from-header-gradient-start to-header-gradient-end text-header-foreground border-0 shadow-lg">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

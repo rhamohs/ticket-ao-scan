@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ValidationResult as ValidationResultType } from '@/types/ticket';
 import { supabaseTicketDB } from '@/lib/supabaseDatabase';
-import { FileText, QrCode, History, RotateCcw, Users } from 'lucide-react';
+import { FileText, QrCode, History, RotateCcw, Users, Camera } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -101,6 +101,23 @@ const Index = () => {
     }, 2000);
   };
 
+  const requestCameraPermission = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      stream.getTracks().forEach(track => track.stop());
+      toast({
+        title: 'Permissão concedida',
+        description: 'Acesso à câmera autorizado com sucesso.',
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Permissão negada',
+        description: 'Não foi possível aceder à câmera.',
+      });
+    }
+  };
+
   const handleClearData = async () => {
     if (confirm('Tem certeza que deseja limpar todos os dados importados e histórico? Esta ação afetará todos os utilizadores.')) {
       try {
@@ -177,6 +194,17 @@ const Index = () => {
             </TabsContent>
 
             <TabsContent value="scanner" className="space-y-4">
+              <div className="flex justify-center mb-4">
+                <Button
+                  onClick={requestCameraPermission}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Camera className="h-4 w-4" />
+                  Autorizar Câmera
+                </Button>
+              </div>
               <QRScanner onValidation={handleValidation} />
             </TabsContent>
 
