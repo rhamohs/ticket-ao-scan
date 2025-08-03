@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Ticket, Shield, Wifi, WifiOff } from 'lucide-react';
+import { Ticket, Wifi, WifiOff } from 'lucide-react';
 
 interface AppHeaderProps {
   isOnline: boolean;
@@ -15,7 +15,11 @@ export function AppHeader({ isOnline, totalTickets }: AppHeaderProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/20 rounded-lg">
-              <Shield className="h-6 w-6" />
+              <img 
+                src="/lovable-uploads/dbc40646-b17b-443b-8168-ed99e9ee1630.png" 
+                alt="Ticket.ao" 
+                className="h-8 w-auto"
+              />
             </div>
             <div>
               <h1 className="text-xl font-bold">Ticket.ao Pro</h1>
