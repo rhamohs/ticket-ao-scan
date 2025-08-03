@@ -1,22 +1,49 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Ticket, Wifi, WifiOff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Ticket, Wifi, WifiOff, Share2, Copy } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface AppHeaderProps {
   isOnline: boolean;
   totalTickets: number;
+  hasData?: boolean;
 }
 
-export function AppHeader({ isOnline, totalTickets }: AppHeaderProps) {
+export function AppHeader({ isOnline, totalTickets, hasData = false }: AppHeaderProps) {
+  const handleShareSession = () => {
+    const shareUrl = `${window.location.origin}?mode=multi&session=${Date.now()}`;
+    
+    if (navigator.share && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      navigator.share({
+        title: 'Ticket.ao Pro - Validação Multi-utilizador',
+        text: 'Aceda à sessão de validação de bilhetes',
+        url: shareUrl
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        toast({
+          title: 'Link copiado!',
+          description: 'Partilhe este link para acesso multi-utilizador.',
+        });
+      }).catch(() => {
+        toast({
+          variant: 'destructive',
+          title: 'Erro',
+          description: 'Não foi possível copiar o link.',
+        });
+      });
+    }
+  };
   return (
-    <Card className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0">
+    <Card className="w-full bg-gradient-to-r from-golden to-golden/80 text-golden-foreground border-0">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/20 rounded-lg">
               <img 
-                src="/lovable-uploads/dbc40646-b17b-443b-8168-ed99e9ee1630.png" 
+                src="/lovable-uploads/4286576c-38a4-4fc4-902b-608c593ecc24.png" 
                 alt="Ticket.ao" 
                 className="h-8 w-auto"
               />
@@ -28,6 +55,19 @@ export function AppHeader({ isOnline, totalTickets }: AppHeaderProps) {
           </div>
           
           <div className="flex items-center gap-3">
+            {/* Share Session Button */}
+            {hasData && (
+              <Button
+                onClick={handleShareSession}
+                variant="secondary"
+                size="sm"
+                className="bg-white/20 text-white hover:bg-white/30 border-white/30"
+              >
+                <Share2 className="h-4 w-4 mr-2" />
+                Partilhar
+              </Button>
+            )}
+            
             {/* Connection Status */}
             <div className="flex items-center gap-2">
               {isOnline ? (

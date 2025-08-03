@@ -19,8 +19,17 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('import');
   const [isInitialized, setIsInitialized] = useState(false);
   const [realtimeUpdates, setRealtimeUpdates] = useState(0);
+  const [isMultiUserMode, setIsMultiUserMode] = useState(false);
 
   useEffect(() => {
+    // Check for multi-user mode in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const isMultiMode = urlParams.get('mode') === 'multi';
+    if (isMultiMode) {
+      setIsMultiUserMode(true);
+      setActiveTab('scanner'); // Go directly to scanner in multi-user mode
+    }
+
     // Check online status
     const handleOnlineStatus = () => setIsOnline(navigator.onLine);
     window.addEventListener('online', handleOnlineStatus);
@@ -33,6 +42,14 @@ const Index = () => {
         const count = await supabaseTicketDB.getTotalTickets();
         setTotalTickets(count);
         setIsInitialized(true);
+        
+        // Show welcome message for multi-user mode
+        if (isMultiMode && count > 0) {
+          toast({
+            title: 'Modo Multi-utilizador Ativo',
+            description: `Conectado à sessão com ${count} bilhetes disponíveis.`,
+          });
+        }
       } catch (error) {
         console.error('Failed to initialize app:', error);
         toast({
@@ -109,7 +126,7 @@ const Index = () => {
       <div className="container mx-auto p-4 max-w-4xl">
         <div className="space-y-6">
           {/* Header */}
-          <AppHeader isOnline={isOnline} totalTickets={totalTickets} />
+          <AppHeader isOnline={isOnline} totalTickets={totalTickets} hasData={totalTickets > 0} />
 
           {/* Multi-user sync status */}
           {isInitialized && (

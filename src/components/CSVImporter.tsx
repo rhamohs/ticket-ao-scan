@@ -122,13 +122,12 @@ export function CSVImporter({ onImportComplete }: CSVImporterProps) {
         />
 
         <div className="text-sm text-muted-foreground space-y-2">
-          <p><strong>Formato esperado do CSV:</strong></p>
+          <p><strong>Formatos CSV suportados:</strong></p>
           <ul className="list-disc list-inside space-y-1 ml-4">
-            <li>ID - Identificador único do bilhete</li>
-            <li>Código QR - Código QR do bilhete</li>
-            <li>Status de Validação - válido/usado/inválido</li>
-            <li>Data/Hora da Validação - (opcional)</li>
-            <li>Número de utilizações - Contador de validações</li>
+            <li><strong>Formato comum:</strong> QR Code URL, Name, Ticket Type, Security Code, Email, Phone</li>
+            <li><strong>Formato padrão:</strong> ID, Código QR, Status de Validação, Data/Hora da Validação, Número de utilizações</li>
+            <li>A aplicação detecta automaticamente diferentes formatos e ordens de colunas</li>
+            <li>Campos obrigatórios: pelo menos um identificador e código QR</li>
           </ul>
         </div>
       </CardContent>
