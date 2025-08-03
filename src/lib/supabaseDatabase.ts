@@ -18,7 +18,7 @@ class SupabaseTicketDatabase {
   async importTickets(csvData: any[]): Promise<number> {
     try {
       // Clear existing tickets
-      await supabase.from('tickets').delete().neq('id', '');
+      await supabase.from('tickets').delete().gt('id', '');
 
       const tickets: DbTicket[] = csvData.map((row, index) => {
         console.log('Supabase DB - Processando linha CSV:', row);
@@ -192,8 +192,8 @@ class SupabaseTicketDatabase {
   async clear(): Promise<void> {
     try {
       await Promise.all([
-        supabase.from('tickets').delete().neq('id', ''),
-        supabase.from('validation_history').delete().neq('id', '')
+        supabase.from('tickets').delete().gt('id', ''),
+        supabase.from('validation_history').delete().gt('id', '')
       ]);
     } catch (error) {
       console.error('Error clearing data:', error);
