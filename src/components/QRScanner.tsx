@@ -305,18 +305,50 @@ export function QRScanner({ onValidation }: QRScannerProps) {
       icon={<Zap className="h-5 w-5 text-primary" />}
       className="w-full"
     >
-        {/* Camera Scanner Button */}
+        {/* Camera Selection and Scanner */}
         <div className="space-y-3">
           {scannerSupported ? (
-            <Button
-              onClick={isScanning ? stopScanning : startScanning}
-              variant={isScanning ? "destructive" : "default"}
-              size="sm"
-              className="w-full h-10 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white border-0 shadow-md text-sm rounded-lg"
-            >
-              <Camera className="h-4 w-4 mr-2" />
-              {isScanning ? 'Parar Scanner' : 'Abrir Scanner'}
-            </Button>
+            <div className="space-y-2">
+              {!isScanning && (
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      setCameraDirection('back');
+                      setTimeout(() => startScanning(), 100);
+                    }}
+                    variant="default"
+                    size="sm"
+                    className="flex-1 h-10 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white border-0 shadow-md text-sm rounded-lg"
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    Câmera Principal
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setCameraDirection('front');
+                      setTimeout(() => startScanning(), 100);
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-10 text-sm rounded-lg"
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    Câmera Frontal
+                  </Button>
+                </div>
+              )}
+              {isScanning && (
+                <Button
+                  onClick={stopScanning}
+                  variant="destructive"
+                  size="sm"
+                  className="w-full h-10 text-sm rounded-lg"
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  Parar Scanner
+                </Button>
+              )}
+            </div>
           ) : (
             <div className="text-center p-3 sm:p-4 bg-muted rounded-lg">
               <Camera className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 text-muted-foreground" />
