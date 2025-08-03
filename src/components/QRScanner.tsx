@@ -70,6 +70,9 @@ export function QRScanner({ onValidation }: QRScannerProps) {
         // Make background transparent
         BarcodeScanner.hideBackground();
         
+        // Add overlay for camera controls
+        addCameraOverlay();
+        
         // Start scanning with current camera direction
         const result = await BarcodeScanner.startScan({
           cameraDirection: cameraDirection
@@ -79,6 +82,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
         
         if (result.hasContent) {
           await validateCode(result.content);
+          removeCameraOverlay();
         }
       } else {
         toast({
@@ -99,6 +103,78 @@ export function QRScanner({ onValidation }: QRScannerProps) {
     }
   };
 
+  const addCameraOverlay = () => {
+    const overlay = document.createElement('div');
+    overlay.id = 'camera-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 8px;
+      backdrop-filter: blur(8px);
+    `;
+
+    const switchButton = document.createElement('button');
+    switchButton.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+      </svg>
+      ${cameraDirection === 'back' ? 'Frontal' : 'Traseira'}
+    `;
+    switchButton.style.cssText = `
+      background: white;
+      color: black;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    `;
+    switchButton.onclick = switchCamera;
+
+    const stopButton = document.createElement('button');
+    stopButton.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+      </svg>
+      Parar
+    `;
+    stopButton.style.cssText = `
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    `;
+    stopButton.onclick = stopScanning;
+
+    overlay.appendChild(switchButton);
+    overlay.appendChild(stopButton);
+    document.body.appendChild(overlay);
+  };
+
+  const removeCameraOverlay = () => {
+    const overlay = document.getElementById('camera-overlay');
+    if (overlay) {
+      overlay.remove();
+    }
+  };
+
   const switchCamera = async () => {
     try {
       const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
@@ -110,6 +186,21 @@ export function QRScanner({ onValidation }: QRScannerProps) {
       const newDirection = cameraDirection === 'back' ? 'front' : 'back';
       setCameraDirection(newDirection);
       
+      // Update overlay button text
+      const overlay = document.getElementById('camera-overlay');
+      if (overlay) {
+        const switchButton = overlay.querySelector('button');
+        if (switchButton) {
+          switchButton.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+            </svg>
+            ${newDirection === 'back' ? 'Frontal' : 'Traseira'}
+          `;
+        }
+      }
+      
       // Restart scanning with new camera direction
       const result = await BarcodeScanner.startScan({
         cameraDirection: newDirection
@@ -119,6 +210,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
       
       if (result.hasContent) {
         await validateCode(result.content);
+        removeCameraOverlay();
       }
     } catch (error) {
       console.error('Camera switch error:', error);
@@ -138,6 +230,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
     } catch (error) {
       // Ignore error if not in mobile environment
     }
+    removeCameraOverlay();
     setIsScanning(false);
   };
 
@@ -149,32 +242,18 @@ export function QRScanner({ onValidation }: QRScannerProps) {
       icon={<Zap className="h-5 w-5 text-primary" />}
       className="w-full"
     >
-        {/* Camera Scanner Buttons */}
+        {/* Camera Scanner Button */}
         <div className="space-y-3">
           {scannerSupported ? (
-            <div className="space-y-2">
-              <Button
-                onClick={isScanning ? stopScanning : startScanning}
-                variant={isScanning ? "destructive" : "default"}
-                size="sm"
-                className="w-full h-10 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white border-0 shadow-md text-sm rounded-lg"
-              >
-                <Camera className="h-4 w-4 mr-2" />
-                {isScanning ? 'Parar Scanner' : 'Abrir Scanner'}
-              </Button>
-              
-              {isScanning && (
-                <Button
-                  onClick={switchCamera}
-                  variant="outline"
-                  size="sm"
-                  className="w-full h-9 text-sm"
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Alternar para Câmera {cameraDirection === 'back' ? 'Frontal' : 'Traseira'}
-                </Button>
-              )}
-            </div>
+            <Button
+              onClick={isScanning ? stopScanning : startScanning}
+              variant={isScanning ? "destructive" : "default"}
+              size="sm"
+              className="w-full h-10 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white border-0 shadow-md text-sm rounded-lg"
+            >
+              <Camera className="h-4 w-4 mr-2" />
+              {isScanning ? 'Parar Scanner' : 'Abrir Scanner'}
+            </Button>
           ) : (
             <div className="text-center p-3 sm:p-4 bg-muted rounded-lg">
               <Camera className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 text-muted-foreground" />
