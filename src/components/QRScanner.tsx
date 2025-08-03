@@ -52,6 +52,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
   };
 
   const startScanning = async () => {
+    console.log('🎥 Starting scanner...');
     setIsScanning(true);
     
     try {
@@ -60,31 +61,39 @@ export function QRScanner({ onValidation }: QRScannerProps) {
       
       // Request permission automatically when opening camera
       let status = await BarcodeScanner.checkPermission({ force: false });
+      console.log('📱 Permission status:', status);
       
       if (status.denied) {
         // If permission is denied, request it
+        console.log('📱 Requesting camera permission...');
         status = await BarcodeScanner.checkPermission({ force: true });
+        console.log('📱 Permission after request:', status);
       }
       
       if (status.granted) {
         // Make background transparent
         BarcodeScanner.hideBackground();
+        console.log('🎥 Background hidden');
         
         // Add overlay for camera controls
         addCameraOverlay();
+        console.log('🎥 Overlay added');
         
         // Start scanning with current camera direction
+        console.log(`🎥 Starting scan with camera: ${cameraDirection}`);
         const result = await BarcodeScanner.startScan({
           cameraDirection: cameraDirection
         });
         
-        console.log(`BarcodeScanner camera direction set to: ${cameraDirection}`);
+        console.log(`🎥 Scan started with camera: ${cameraDirection}`);
         
         if (result.hasContent) {
+          console.log('📷 QR Code scanned:', result.content);
           await validateCode(result.content);
           removeCameraOverlay();
         }
       } else {
+        console.log('❌ Camera permission denied');
         toast({
           variant: 'destructive',
           title: 'Permissão necessária',
@@ -93,7 +102,7 @@ export function QRScanner({ onValidation }: QRScannerProps) {
         setIsScanning(false);
       }
     } catch (error) {
-      console.error('Scanner error:', error);
+      console.error('❌ Scanner error:', error);
       toast({
         variant: 'destructive',
         title: 'Erro do scanner',
