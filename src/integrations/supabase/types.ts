@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          id: string
+          ip_address: unknown | null
+          record_id: string | null
+          table_name: string
+          timestamp: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          id?: string
+          ip_address?: unknown | null
+          record_id?: string | null
+          table_name: string
+          timestamp?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          id?: string
+          ip_address?: unknown | null
+          record_id?: string | null
+          table_name?: string
+          timestamp?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -160,6 +193,19 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_masked_ticket_info: {
+        Args: { ticket_qr_code: string }
+        Returns: {
+          event_name: string
+          id: string
+          masked_email: string
+          masked_phone: string
+          name: string
+          qr_code: string
+          status: string
+          validation_count: number
+        }[]
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -174,6 +220,10 @@ export type Database = {
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      log_data_access: {
+        Args: { action_type: string; record_id?: string; table_name: string }
+        Returns: undefined
       }
       revoke_user_role: {
         Args: {
