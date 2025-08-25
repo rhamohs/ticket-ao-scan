@@ -2,8 +2,9 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Ticket, Wifi, WifiOff, Share2, Copy } from 'lucide-react';
+import { Ticket, Wifi, WifiOff, Share2, LogOut, User, Shield } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AppHeaderProps {
   isOnline: boolean;
@@ -12,6 +13,8 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ isOnline, totalTickets, hasData = false }: AppHeaderProps) {
+  const { user, userRole, signOut, isAdmin, isStaff } = useAuth();
+
   const handleShareSession = () => {
     const shareUrl = `${window.location.origin}?mode=multi&session=${Date.now()}`;
     
@@ -36,6 +39,7 @@ export function AppHeader({ isOnline, totalTickets, hasData = false }: AppHeader
       });
     }
   };
+
   return (
     <Card className="w-full bg-transparent border-0 shadow-none">
       <CardContent className="p-2 sm:p-4">
@@ -58,8 +62,30 @@ export function AppHeader({ isOnline, totalTickets, hasData = false }: AppHeader
           </div>
           
           <div className="flex items-center gap-1 sm:gap-3 flex-wrap">
-            {/* Share Session Button */}
-            {hasData && (
+            {/* User Info */}
+            <div className="flex items-center gap-2">
+              <User className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground hidden sm:inline">
+                {user?.email?.split('@')[0]}
+              </span>
+              <Badge 
+                variant={isAdmin ? "destructive" : isStaff ? "default" : "secondary"}
+                className="text-xs"
+              >
+                {userRole}
+              </Badge>
+            </div>
+
+            {/* Security Indicator */}
+            <div className="flex items-center gap-1">
+              <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-success" />
+              <span className="text-xs text-muted-foreground font-medium hidden sm:inline">
+                Secure
+              </span>
+            </div>
+
+            {/* Share Session Button - Only for Staff/Admin */}
+            {hasData && isStaff && (
               <Button
                 onClick={handleShareSession}
                 variant="ghost"
@@ -91,6 +117,17 @@ export function AppHeader({ isOnline, totalTickets, hasData = false }: AppHeader
                 {totalTickets} bilhetes
               </Badge>
             </div>
+
+            {/* Sign Out Button */}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={signOut}
+              className="bg-transparent text-foreground border-0 hover:bg-destructive/10 text-xs px-2 sm:px-3"
+            >
+              <LogOut className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Sair</span>
+            </Button>
           </div>
         </div>
       </CardContent>
