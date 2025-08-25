@@ -153,6 +153,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_user_role: {
+        Args: {
+          new_role: Database["public"]["Enums"]["app_role"]
+          target_user_id: string
+        }
+        Returns: boolean
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -166,6 +173,13 @@ export type Database = {
       }
       is_admin: {
         Args: { user_id: string }
+        Returns: boolean
+      }
+      revoke_user_role: {
+        Args: {
+          role_to_revoke: Database["public"]["Enums"]["app_role"]
+          target_user_id: string
+        }
         Returns: boolean
       }
     }
